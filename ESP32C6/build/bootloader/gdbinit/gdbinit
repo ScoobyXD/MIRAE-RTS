@@ -1,0 +1,2 @@
+source C:/Users/Jonat/miraeswarm/ESP32C6/build/bootloader/gdbinit/symbols
+source C:/Users/Jonat/miraeswarm/ESP32C6/build/bootloader/gdbinit/connect
