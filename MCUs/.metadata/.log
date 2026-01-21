@@ -1,0 +1,85 @@
+!SESSION 2026-01-21 10:39:45.265 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2026-01-21 10:40:37.421
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-01-21 10:40:37.444
+!MESSAGE Log4j2 initialized with config file C:\Users\Jonat\MIRAE RTS\MCUs\.metadata\.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-01-21 10:40:43.341
+!MESSAGE Started RMI Server, listening on port 41337
+!SESSION 2026-01-21 11:01:01.632 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2026-01-21 11:01:07.898
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-01-21 11:01:07.901
+!MESSAGE Log4j2 initialized with config file C:\Users\Jonat\MIRAE RTS\MCUs\.metadata\.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-01-21 11:01:11.372
+!MESSAGE Started RMI Server, listening on port 41337
+!SESSION 2026-01-21 11:03:39.436 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2026-01-21 11:03:43.769
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-01-21 11:03:43.771
+!MESSAGE Log4j2 initialized with config file C:\Users\Jonat\MIRAE RTS\MCUs\.metadata\.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-01-21 11:03:46.459
+!MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-01-21 11:09:42.864
+!MESSAGE Indexed 'IMUTransceiverSTM32L476RG' (21 sources, 81 headers) in 4.02 sec: 5,116 declarations; 24,153 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0068%)
+
+!ENTRY org.eclipse.core.jobs 4 2 2026-01-21 11:14:32.559
+!MESSAGE An internal error occurred during: "Fetch Toolchain List...".
+!STACK 0
+org.eclipse.swt.SWTException: Device is disposed
+	at org.eclipse.swt.SWT.error(SWT.java:4918)
+	at org.eclipse.swt.SWT.error(SWT.java:4833)
+	at org.eclipse.swt.SWT.error(SWT.java:4804)
+	at org.eclipse.swt.widgets.Display.error(Display.java:1278)
+	at org.eclipse.swt.widgets.Display.syncExec(Display.java:4799)
+	at com.st.stm32cube.ide.mcu.toolchain.ui.preferences.MCUToolchainManagerPreferencePage$12$1.worked(MCUToolchainManagerPreferencePage.java:743)
+	at org.eclipse.core.runtime.SubMonitor$RootInfo.worked(SubMonitor.java:303)
+	at org.eclipse.core.runtime.SubMonitor.done(SubMonitor.java:730)
+	at org.eclipse.core.runtime.SubMonitor.cleanupActiveChild(SubMonitor.java:1143)
+	at org.eclipse.core.runtime.SubMonitor.done(SubMonitor.java:727)
+	at org.eclipse.equinox.internal.p2.director.SimplePlanner.getProvisioningPlan(SimplePlanner.java:515)
+	at org.eclipse.equinox.internal.p2.operations.PlannerResolutionJob.runModal(PlannerResolutionJob.java:100)
+	at org.eclipse.equinox.p2.operations.ProfileChangeOperation.resolveModal(ProfileChangeOperation.java:117)
+	at com.st.stm32cube.ide.mcu.p2.P2Utils.getInstallableUnits(P2Utils.java:261)
+	at com.st.stm32cube.ide.mcu.p2.P2Utils.getInstallableUnits(P2Utils.java:181)
+	at com.st.stm32cube.ide.mcu.toolchain.ui.preferences.MCUToolchainManagerPreferencePage$12.run(MCUToolchainManagerPreferencePage.java:759)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:63)
+!SESSION 2026-01-21 11:14:34.435 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=en_US
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2026-01-21 11:15:14.958
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2026-01-21 11:15:14.972
+!MESSAGE Log4j2 initialized with config file C:\Users\Jonat\MIRAE RTS\MCUs\.metadata\.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-01-21 11:15:23.386
+!MESSAGE Started RMI Server, listening on port 41337
