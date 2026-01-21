@@ -1,0 +1,9 @@
+Designator,Mid X,Mid Y,Rotation,Layer
+BuckConverter3-17V->3.3V-C1,139.9,-96.2,-90,top
+BuckConverter3-17V->3.3V-C2,150.75,-99.25,90,top
+BuckConverter3-17V->3.3V-L1,147.5625,-96.2,0,top
+BuckConverter3-17V->3.3V-LED1,144.9,-93.5175,90,top
+BuckConverter3-17V->3.3V-R1,146.6975,-93.1,0,top
+BuckConverter3-17V->3.3V-ScrewTerminalInput1,134.7,-94.45,-90,top
+BuckConverter3-17V->3.3V-ScrewTerminalOutput1,155.6675,-97.95,90,top
+U6,142.9,-96.2,0,top
