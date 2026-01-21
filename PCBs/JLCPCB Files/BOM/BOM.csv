@@ -1,9 +1,48 @@
-Comment,Designator,Footprint
-Buck Converter IC (TPS62172DSGR),U6,Package_SON:WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm_ThermalVias
-10uF,BuckConverter3-17V->3.3V-C1,Capacitor_Tantalum_SMD:CP_EIA-1608-10_AVX_L
-22uF,BuckConverter3-17V->3.3V-C2,Capacitor_Tantalum_SMD:CP_EIA-1608-10_AVX_L
-2.2uH,BuckConverter3-17V->3.3V-L1,Inductor_SMD:L_1008_2520Metric_Pad1.43x2.20mm_HandSolder
-LED,BuckConverter3-17V->3.3V-LED1,LED_SMD:LED_0201_0603Metric_Pad0.64x0.40mm_HandSolder
-100k Ohms,BuckConverter3-17V->3.3V-R1,Resistor_SMD:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder
-Screw Terminal (DNP / THT) 1x02 Horizontal,BuckConverter3-17V->3.3V-ScrewTerminalInput1,TerminalBlock_4Ucon:TerminalBlock_4Ucon_1x02_P3.50mm_Horizontal
-Screw Terminal (DNP / THT) 1x02 Horizontal,BuckConverter3-17V->3.3V-ScrewTerminalOutput1,TerminalBlock_4Ucon:TerminalBlock_4Ucon_1x02_P3.50mm_Horizontal
+Comment,Designator,Footprint,JLCPCB Part #
+Screw Terminal (DNP / THT) 1x02 Horizontal,P1,CONN-TH_2P-P5.00_WJ128V-5.0-2P,C8269
+10uF,C1,C0603,C1691
+22uF,C2,C0805,C5674
+2.2uH,L1,IND-SMD_L4.0-W4.0_LQH44PN2R2MP0L,C135262
+Buck Converter IC (TPS62172DSGR),U1,WSON-8_L2.0-W2.0-P0.50-TL-EP,C59873
+LED,LED1,LED-SMD_L0.7-W0.4-RD_GREEN,C3646922
+100k Ohms,R1,R0402,C176119
+Screw Terminal (DNP / THT) 1x02 Horizontal,P2,CONN-TH_2P-P5.00_WJ128V-5.0-2P,C8269
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
+,,,
