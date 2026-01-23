@@ -54,3 +54,122 @@ arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf
    4948	     12	   1572	   6532	   1984	IMUTransceiverSTM32L476RG.elf
 Finished building: default.size.stdout
  
+11:45:52 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:12:3: warning: implicit declaration of function 'GPIOPortAConfig' [-Wimplicit-function-declaration]
+   12 |   GPIOPortAConfig();
+      |   ^~~~~~~~~~~~~~~
+../Core/Src/main.c:15:11: warning: implicit declaration of function 'Heartbeat'; did you mean 'HeartBeat'? [-Wimplicit-function-declaration]
+   15 |           Heartbeat();
+      |           ^~~~~~~~~
+      |           HeartBeat
+../Core/Src/main.c: At top level:
+../Core/Src/main.c:19:6: warning: conflicting types for 'Heartbeat'; have 'void(void)'
+   19 | void Heartbeat(void){
+      |      ^~~~~~~~~
+../Core/Src/main.c:15:11: note: previous implicit declaration of 'Heartbeat' with type 'void(void)'
+   15 |           Heartbeat();
+      |           ^~~~~~~~~
+../Core/Src/main.c:26:6: warning: conflicting types for 'GPIOPortAConfig'; have 'void(void)'
+   26 | void GPIOPortAConfig(void){
+      |      ^~~~~~~~~~~~~~~
+../Core/Src/main.c:12:3: note: previous implicit declaration of 'GPIOPortAConfig' with type 'void(void)'
+   12 |   GPIOPortAConfig();
+      |   ^~~~~~~~~~~~~~~
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+   5036	     12	   1572	   6620	   19dc	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+11:47:45 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+   5032	     12	   1572	   6616	   19d8	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+11:47:51 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+   text	   data	    bss	    dec	    hex	filename
+   5032	     12	   1572	   6616	   19d8	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+11:55:27 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+   5032	     12	   1572	   6616	   19d8	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+11:58:24 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+   text	   data	    bss	    dec	    hex	filename
+   5032	     12	   1572	   6616	   19d8	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+12:04:09 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+   5032	     12	   1572	   6616	   19d8	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+12:05:55 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+   5048	     12	   1572	   6632	   19e8	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+12:07:07 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+   5048	     12	   1572	   6632	   19e8	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
