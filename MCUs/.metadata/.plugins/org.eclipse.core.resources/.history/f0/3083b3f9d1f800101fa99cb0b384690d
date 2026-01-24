@@ -26,7 +26,7 @@ int main(void){
 }
 
 static void prvCreateTasks(void){
-	static uint32_t rate = 500; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
+	uint32_t rate = 25; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
 	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
 
 }
@@ -58,18 +58,15 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  // Enable MSI and the PLL for 80MHz
+  // Enable MSI and PLL for 80MHz
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
-  RCC_OscInitStruct.MSIClockRange = RCC_CR_MSIRANGE_7; // Set to 8MHz. CubeIDE defaults project to RCC_CR_MSIRANGE_6 (4MHz). Internal RC oscillator (MSI) tops out at 48MHz.
+  RCC_OscInitStruct.MSIClockRange = RCC_CR_MSIRANGE_7; // CubeIDE defaults project to RCC_CR_MSIRANGE_6 (4MHz). I set to 8MHz. Internal RC oscillator (MSI) tops out at 48MHz.
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
-  RCC_OscInitStruct.PLL.PLLM = 1; // 8MHz / 1 = 8MHz input to PLL
-  RCC_OscInitStruct.PLL.PLLN = 20; // 8MHz * 20 = 160MHz VCO
-  RCC_OscInitStruct.PLL.PLLR = 2; // 160MHz / 2 = 80MHz output
-  RCC_OscInitStruct.PLL.PLLP = 7;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLN = 10;
+  HAL_RCC_OscConfig(&RCC_OscInitStruct);
 
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -78,7 +75,7 @@ void SystemClock_Config(void)
 
   // Set clocks for 80MHz
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK; // Went from MSI to PLLCLK
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;

@@ -26,7 +26,7 @@ int main(void){
 }
 
 static void prvCreateTasks(void){
-	static uint32_t rate = 500; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
+	uint32_t rate = 500; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
 	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
 
 }

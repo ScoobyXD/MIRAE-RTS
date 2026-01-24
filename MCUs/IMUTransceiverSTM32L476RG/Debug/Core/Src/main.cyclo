@@ -2,5 +2,5 @@
 ../Core/Src/main.c:28:13:prvCreateTasks	1
 ../Core/Src/main.c:34:6:vHeartbeat	1
 ../Core/Src/main.c:45:6:GPIOPortAConfig	1
-../Core/Src/main.c:58:6:SystemClock_Config	4
-../Core/Src/main.c:91:6:Error_Handler	1
+../Core/Src/main.c:51:6:SystemClock_Config	4
+../Core/Src/main.c:92:6:Error_Handler	1
