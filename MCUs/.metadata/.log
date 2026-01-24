@@ -61,3 +61,15 @@ Command-line arguments:  -os win32 -ws win32 -arch x86_64
 
 !ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2026-01-23 12:02:26.052
 !MESSAGE Started RMI Server, listening on port 41337
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-01-23 16:11:04.137
+!MESSAGE Indexed 'IMUTransceiverSTM32L476RG' (22 sources, 81 headers) in 2.96 sec: 5,130 declarations; 24,188 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0068%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-01-23 16:11:06.799
+!MESSAGE Indexed 'IMUTransceiverSTM32L476RG' (21 sources, 81 headers) in 1.48 sec: 5,118 declarations; 24,188 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0068%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-01-23 16:14:26.959
+!MESSAGE Indexed 'IMUTransceiverSTM32L476RG' (21 sources, 81 headers) in 1.1 sec: 5,118 declarations; 24,188 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0068%)
+
+!ENTRY org.eclipse.cdt.core 1 0 2026-01-23 16:15:17.943
+!MESSAGE Indexed 'IMUTransceiverSTM32L476RG' (21 sources, 81 headers) in 1.15 sec: 5,118 declarations; 24,188 references; 0 unresolved inclusions; 1 syntax errors; 2 unresolved names (0.0068%)

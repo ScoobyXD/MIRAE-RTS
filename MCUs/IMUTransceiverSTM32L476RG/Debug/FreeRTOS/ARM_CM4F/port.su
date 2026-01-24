@@ -1,0 +1,12 @@
+../FreeRTOS/ARM_CM4F/port.c:202:15:pxPortInitialiseStack	24	static
+../FreeRTOS/ARM_CM4F/port.c:234:13:prvTaskExitError	16	static,ignoring_inline_asm
+../FreeRTOS/ARM_CM4F/port.c:260:6:SVC_Handler	0	static,ignoring_inline_asm
+../FreeRTOS/ARM_CM4F/port.c:278:13:prvPortStartFirstTask	0	static,ignoring_inline_asm
+../FreeRTOS/ARM_CM4F/port.c:305:12:xPortStartScheduler	16	static
+../FreeRTOS/ARM_CM4F/port.c:467:6:vPortEndScheduler	4	static
+../FreeRTOS/ARM_CM4F/port.c:475:6:vPortEnterCritical	16	static,ignoring_inline_asm
+../FreeRTOS/ARM_CM4F/port.c:492:6:vPortExitCritical	16	static,ignoring_inline_asm
+../FreeRTOS/ARM_CM4F/port.c:504:6:PendSV_Handler	0	static,ignoring_inline_asm
+../FreeRTOS/ARM_CM4F/port.c:560:6:SysTick_Handler	16	static,ignoring_inline_asm
+../FreeRTOS/ARM_CM4F/port.c:812:32:vPortSetupTimerInterrupt	4	static
+../FreeRTOS/ARM_CM4F/port.c:834:13:vPortEnableVFP	0	static,ignoring_inline_asm

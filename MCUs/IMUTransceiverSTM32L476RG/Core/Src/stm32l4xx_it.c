@@ -141,15 +141,17 @@ void UsageFault_Handler(void)
 /**
   * @brief This function handles System service call via SWI instruction.
   */
-void SVC_Handler(void)
-{
-  /* USER CODE BEGIN SVCall_IRQn 0 */
 
-  /* USER CODE END SVCall_IRQn 0 */
-  /* USER CODE BEGIN SVCall_IRQn 1 */
+// commented because using FreeRTOS handlers instead (MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\Core\Inc\FreeRTOSConfig.h Line 54)  
+// void SVC_Handler(void)
+// {
+//   /* USER CODE BEGIN SVCall_IRQn 0 */
 
-  /* USER CODE END SVCall_IRQn 1 */
-}
+//   /* USER CODE END SVCall_IRQn 0 */
+//   /* USER CODE BEGIN SVCall_IRQn 1 */
+
+//   /* USER CODE END SVCall_IRQn 1 */
+// }
 
 /**
   * @brief This function handles Debug monitor.
@@ -167,29 +169,31 @@ void DebugMon_Handler(void)
 /**
   * @brief This function handles Pendable request for system service.
   */
-void PendSV_Handler(void)
-{
-  /* USER CODE BEGIN PendSV_IRQn 0 */
+// commented because using FreeRTOS handlers instead (MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\Core\Inc\FreeRTOSConfig.h Line 55)
+// void PendSV_Handler(void)
+// {
+//   /* USER CODE BEGIN PendSV_IRQn 0 */
 
-  /* USER CODE END PendSV_IRQn 0 */
-  /* USER CODE BEGIN PendSV_IRQn 1 */
+//   /* USER CODE END PendSV_IRQn 0 */
+//   /* USER CODE BEGIN PendSV_IRQn 1 */
 
-  /* USER CODE END PendSV_IRQn 1 */
-}
+//   /* USER CODE END PendSV_IRQn 1 */
+// }
 
 /**
   * @brief This function handles System tick timer.
   */
-void SysTick_Handler(void)
-{
-  /* USER CODE BEGIN SysTick_IRQn 0 */
+ // commented because using FreeRTOS handlers instead (MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\Core\Inc\FreeRTOSConfig.h Line 56)
+// void SysTick_Handler(void)
+// {
+//   /* USER CODE BEGIN SysTick_IRQn 0 */
 
-  /* USER CODE END SysTick_IRQn 0 */
-  HAL_IncTick();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
+//   /* USER CODE END SysTick_IRQn 0 */
+//   HAL_IncTick();
+//   /* USER CODE BEGIN SysTick_IRQn 1 */
 
-  /* USER CODE END SysTick_IRQn 1 */
-}
+//   /* USER CODE END SysTick_IRQn 1 */
+// }
 
 /******************************************************************************/
 /* STM32L4xx Peripheral Interrupt Handlers                                    */

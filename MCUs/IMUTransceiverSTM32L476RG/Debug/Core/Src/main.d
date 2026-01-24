@@ -1,4 +1,9 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
+Core/Src/main.o: ../Core/Src/main.c ../FreeRTOS/include/FreeRTOS.h \
+ ../Core/Inc/FreeRTOSConfig.h ../FreeRTOS/include/projdefs.h \
+ ../FreeRTOS/include/portable.h \
+ ../FreeRTOS/include/deprecated_definitions.h \
+ ../FreeRTOS/ARM_CM4F/portmacro.h ../FreeRTOS/include/mpu_wrappers.h \
+ ../FreeRTOS/include/task.h ../FreeRTOS/include/list.h ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \
@@ -24,6 +29,15 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ramfunc.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h
+../FreeRTOS/include/FreeRTOS.h:
+../Core/Inc/FreeRTOSConfig.h:
+../FreeRTOS/include/projdefs.h:
+../FreeRTOS/include/portable.h:
+../FreeRTOS/include/deprecated_definitions.h:
+../FreeRTOS/ARM_CM4F/portmacro.h:
+../FreeRTOS/include/mpu_wrappers.h:
+../FreeRTOS/include/task.h:
+../FreeRTOS/include/list.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:

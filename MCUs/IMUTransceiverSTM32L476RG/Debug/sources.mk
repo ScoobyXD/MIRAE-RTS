@@ -25,4 +25,7 @@ SUBDIRS := \
 Core/Src \
 Core/Startup \
 Drivers/STM32L4xx_HAL_Driver/Src \
+FreeRTOS/ARM_CM4F \
+FreeRTOS \
+FreeRTOS/source \
 

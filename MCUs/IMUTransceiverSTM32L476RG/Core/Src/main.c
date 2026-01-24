@@ -1,35 +1,55 @@
 //Pins
 //D7-PA_8-Heartbeat LED
 
+#include "FreeRTOS.h"
+#include "task.h" // Used for FreeRTOS
 #include "main.h"
 
 void SystemClock_Config(void);
 void GPIOPortAConfig(void);
-void Heartbeat(void);
+static void prvCreateTasks(void);
+void vHeartbeat(void *pvParameters);
 
 int main(void){
   HAL_Init(); //necessary for now
-  SystemClock_Config(); //clock config
+  SystemClock_Config();
   GPIOPortAConfig();
+  prvCreateTasks();
+  vTaskStartScheduler();
 
-  while(1){
-	  Heartbeat();
-  }
+  for(;;);
+
 }
 
-void Heartbeat(void){
-	GPIOA->ODR |= GPIO_ODR_OD8; // Turn on external LED PA_8 (pin D7)
-	//wait 1 sec
-	//GPIOA->ODR &= ~GPIO_ODR_OD8; // Turn off
-	//wait 1 sec
+static void prvCreateTasks(void){
+	static uint32_t rate = 25; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
+	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
+}
+
+void vHeartbeat(void *pvParameters){
+	uint32_t *rate = (uint32_t*)pvParameters;
+
+	for(;;){
+		GPIOA->ODR |= GPIO_ODR_OD8; // Turn on external LED PA_8 (pin D7)
+		vTaskDelay(pdMS_TO_TICKS(*rate));
+		GPIOA->ODR &= ~GPIO_ODR_OD8; // Turn off
+		vTaskDelay(pdMS_TO_TICKS(*rate));
+	}
 }
 
 void GPIOPortAConfig(void){
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; // Turn on clock for AHB2 bus
-	GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk;
+	GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk; // The starting value of MODER is like 111111111111111111111 so you need to mask to make sure the register you want is primed to set value
 	GPIOA->MODER |= GPIO_MODER_MODE8_0; // General output
 }
 
+
+
+
+
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+// I did not write below
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
