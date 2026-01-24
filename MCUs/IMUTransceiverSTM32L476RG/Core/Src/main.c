@@ -15,15 +15,20 @@ int main(void){
   SystemClock_Config();
   GPIOPortAConfig();
   prvCreateTasks();
-  vTaskStartScheduler();
+  vTaskStartScheduler(); // Actually runs rtos
+
+  while(1){
+	  vApplicationTickHook();
+  }
 
   for(;;);
 
 }
 
 static void prvCreateTasks(void){
-	static uint32_t rate = 25; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
+	uint32_t rate = 25; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
 	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
+
 }
 
 void vHeartbeat(void *pvParameters){
@@ -43,13 +48,6 @@ void GPIOPortAConfig(void){
 	GPIOA->MODER |= GPIO_MODER_MODE8_0; // General output
 }
 
-
-
-
-
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-// I did not write below
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -60,24 +58,29 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
+  // Enable MSI and PLL for 80MHz
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
   RCC_OscInitStruct.MSICalibrationValue = 0;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.MSIClockRange = RCC_CR_MSIRANGE_7; // CubeIDE defaults project to RCC_CR_MSIRANGE_6 (4MHz). I set to 8MHz. Internal RC oscillator (MSI) tops out at 48MHz.
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLN = 10;
+  HAL_RCC_OscConfig(&RCC_OscInitStruct);
+
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
 
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  // Set clocks for 80MHz
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK) // As RCC_MSIRANGE_X goes higher, you need to increase this. 4 wait states for 80MHz
   {
     Error_Handler();
   }

@@ -407,3 +407,176 @@ Finished building: default.size.stdout
  
 Finished building: IMUTransceiverSTM32L476RG.list
  
+17:23:16 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+  10956	     24	  17216	  28196	   6e24	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+17:40:40 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+   text	   data	    bss	    dec	    hex	filename
+  10956	     24	  17216	  28196	   6e24	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+17:41:13 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+   text	   data	    bss	    dec	    hex	filename
+  10956	     24	  17216	  28196	   6e24	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+17:43:14 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+  10960	     20	  17220	  28200	   6e28	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+17:43:23 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+   text	   data	    bss	    dec	    hex	filename
+  10960	     20	  17220	  28200	   6e28	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+17:50:41 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'prvCreateTasks':
+../Core/Src/main.c:27:21: warning: passing argument 1 of 'xTaskCreate' from incompatible pointer type [-Wincompatible-pointer-types]
+   27 |         xTaskCreate(vApplicationTickHook, "test", 1024, NULL, 2, NULL);
+      |                     ^~~~~~~~~~~~~~~~~~~~
+      |                     |
+      |                     void (*)(void)
+In file included from ../Core/Src/main.c:5:
+../FreeRTOS/include/task.h:385:44: note: expected 'TaskFunction_t' {aka 'void (*)(void *)'} but argument is of type 'void (*)(void)'
+  385 |     BaseType_t xTaskCreate( TaskFunction_t pxTaskCode,
+      |                             ~~~~~~~~~~~~~~~^~~~~~~~~~
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+C:/ST/STM32CubeIDE_1.16.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.200.202406191623/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld.exe: ./Core/Src/main.o: in function `vApplicationTickHook':
+C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/main.c:41: multiple definition of `vApplicationTickHook'; ./Core/Src/freertos_hooks.o:C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/freertos_hooks.c:11: first defined here
+collect2.exe: error: ld returned 1 exit status
+make: *** [makefile:67: IMUTransceiverSTM32L476RG.elf] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+17:51:09 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'prvCreateTasks':
+../Core/Src/main.c:28:21: warning: passing argument 1 of 'xTaskCreate' from incompatible pointer type [-Wincompatible-pointer-types]
+   28 |         xTaskCreate(vApplicationTickHook, "test", 1024, NULL, 1, NULL);
+      |                     ^~~~~~~~~~~~~~~~~~~~
+      |                     |
+      |                     void (*)(void)
+In file included from ../Core/Src/main.c:5:
+../FreeRTOS/include/task.h:385:44: note: expected 'TaskFunction_t' {aka 'void (*)(void *)'} but argument is of type 'void (*)(void)'
+  385 |     BaseType_t xTaskCreate( TaskFunction_t pxTaskCode,
+      |                             ~~~~~~~~~~~~~~~^~~~~~~~~~
+../Core/Src/main.c:26:18: warning: unused variable 'rate' [-Wunused-variable]
+   26 |         uint32_t rate = 25; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
+      |                  ^~~~
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+C:/ST/STM32CubeIDE_1.16.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.200.202406191623/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld.exe: ./Core/Src/main.o: in function `vApplicationTickHook':
+C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/main.c:42: multiple definition of `vApplicationTickHook'; ./Core/Src/freertos_hooks.o:C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/freertos_hooks.c:11: first defined here
+collect2.exe: error: ld returned 1 exit status
+make: *** [makefile:67: IMUTransceiverSTM32L476RG.elf] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+17:51:18 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+C:/ST/STM32CubeIDE_1.16.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.200.202406191623/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld.exe: ./Core/Src/main.o: in function `vApplicationTickHook':
+C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/main.c:42: multiple definition of `vApplicationTickHook'; ./Core/Src/freertos_hooks.o:C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/freertos_hooks.c:11: first defined here
+collect2.exe: error: ld returned 1 exit status
+make: *** [makefile:67: IMUTransceiverSTM32L476RG.elf] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+17:52:16 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+C:/ST/STM32CubeIDE_1.16.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.200.202406191623/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld.exe: ./Core/Src/main.o: in function `vApplicationTickHook':
+C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/main.c:46: multiple definition of `vApplicationTickHook'; ./Core/Src/freertos_hooks.o:C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/freertos_hooks.c:11: first defined here
+collect2.exe: error: ld returned 1 exit status
+make: *** [makefile:67: IMUTransceiverSTM32L476RG.elf] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+17:52:49 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+  10960	     20	  17220	  28200	   6e28	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+17:52:57 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+C:/ST/STM32CubeIDE_1.16.1/STM32CubeIDE/plugins/com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.200.202406191623/tools/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld.exe: ./Core/Src/main.o: in function `vApplicationTickHook':
+C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/main.c:30: multiple definition of `vApplicationTickHook'; ./Core/Src/freertos_hooks.o:C:/Users/Jonat/MIRAERTS/MCUs/IMUTransceiverSTM32L476RG/Debug/../Core/Src/freertos_hooks.c:11: first defined here
+collect2.exe: error: ld returned 1 exit status
+make: *** [makefile:67: IMUTransceiverSTM32L476RG.elf] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+17:54:02 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/freertos_hooks.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/freertos_hooks.d" -MT"Core/Src/freertos_hooks.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/freertos_hooks.o"
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+  10980	     20	  17220	  28220	   6e3c	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+17:54:05 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+   text	   data	    bss	    dec	    hex	filename
+  10980	     20	  17220	  28220	   6e3c	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+18:00:45 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+   text	   data	    bss	    dec	    hex	filename
+  10980	     20	  17220	  28220	   6e3c	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+18:01:24 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/freertos_hooks.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/freertos_hooks.d" -MT"Core/Src/freertos_hooks.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/freertos_hooks.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+  10960	     20	  17220	  28200	   6e28	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
