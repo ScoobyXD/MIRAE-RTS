@@ -6,7 +6,6 @@
 #include "FreeRTOS.h"
 #include "task.h" //Used for FreeRTOS
 #include "main.h"
-#include "stm32l476xx.h"
 
 void SystemClock_Config(void);
 void GPIOPortConfig(void);
@@ -14,15 +13,18 @@ void I2CConfig(void);
 static void prvCreateTasks(void);
 void vHeartbeat(void *pvParameters);
 
-volatile uint32_t tmpreg;
-
 int main(void){
   HAL_Init(); //Necessary for now
   SystemClock_Config();
   GPIOPortConfig();
   I2CConfig();
+
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos
+
+  while(1){
+	  vApplicationTickHook();
+  }
 
   for(;;);
 
@@ -47,7 +49,7 @@ static void prvCreateTasks(void){
 void I2CConfig(void){
 	RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN;
 	tmpreg = RCC->APB1ENR1;
-	UNUSED(tmpreg);
+	UNUSED(tmpref);
 
 	I2C1->CR1 &= ~I2C_CR1_PE; //Turn off I2C1 control for now
 	RCC->APB1RSTR1 |= RCC_APB1RSTR1_I2C1RST; //Im not sure why its recommended to reset, but I guess if we REALLY want to make sure, we reset
@@ -68,7 +70,7 @@ void I2CConfig(void){
 		0x9U << I2C_TIMINGR_SCLL_Pos; //period the clock stays high (49+1)ticks * 100ns = 5us
 
 	//I2C1->CR1 |= (I2C_CR1_TXDMAEN) | (I2C_CR1_RXDMAEN); //Enable TX and RX to read using DMA
-	//I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+	I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
 
 	//NVIC_SetIRQ(I2C1_EV_IRQn); //enable interrupt events
 	//NVIC_SetIRQ(I2C1_ER_IRQn); //enable interrupt errors
@@ -79,7 +81,7 @@ void I2CConfig(void){
 void GPIOPortConfig(void){
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; //Turn on clock for AHB2 bus
 	tmpreg = RCC->AHB2ENR;
-	UNUSED(tmpreg);
+	UNUSED(tmpref);
 	GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk; //The starting value of MODER is like 111111111111111111111 so you need to mask to make sure the register you want is primed to set value
 	GPIOA->MODER |= GPIO_MODER_MODE8_0; //General output
 
@@ -93,6 +95,7 @@ void GPIOPortConfig(void){
 	GPIOB->PUPDR |= (GPIO_PUPDR_PUPD8_0) | (GPIO_PUPDR_PUPD9_0); //PB8/PB9 pull-up register. We set output type to be open-drain,so we need a pull up resistor, also need external 4.7kOhms resistor, internal one too weak
 	GPIOB->OSPEEDR &= ~((GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9));
 	GPIOB->OSPEEDR |= (GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9); //Set speed to the highest cuz why not(11)
+
 }
 
 void SystemClock_Config(void)

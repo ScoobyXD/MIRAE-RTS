@@ -24,6 +24,11 @@ int main(void){
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos
 
+  /*
+  while(1){
+	  vApplicationTickHook();
+  }*/
+
   for(;;);
 
 }

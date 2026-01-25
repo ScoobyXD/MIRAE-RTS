@@ -690,3 +690,281 @@ Finished building: default.size.stdout
  
 Finished building: IMUTransceiverSTM32L476RG.list
  
+19:07:29 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'I2CConfig':
+../Core/Src/main.c:51:9: error: 'tmpreg' undeclared (first use in this function)
+   51 |         tmpreg = RCC->APB1ENR1;
+      |         ^~~~~~
+../Core/Src/main.c:51:9: note: each undeclared identifier is reported only once for each function it appears in
+In file included from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:27,
+                 from ../Core/Inc/stm32l4xx_hal_conf.h:258,
+                 from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:8:
+../Core/Src/main.c:52:16: error: 'tmpref' undeclared (first use in this function)
+   52 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+../Core/Src/main.c:73:21: error: 'I2C_ICR_CLEAR' undeclared (first use in this function); did you mean 'I2C_ISR_BERR'?
+   73 |         I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+      |                     ^~~~~~~~~~~~~
+      |                     I2C_ISR_BERR
+../Core/Src/main.c: In function 'GPIOPortConfig':
+../Core/Src/main.c:83:9: error: 'tmpreg' undeclared (first use in this function)
+   83 |         tmpreg = RCC->AHB2ENR;
+      |         ^~~~~~
+../Core/Src/main.c:84:16: error: 'tmpref' undeclared (first use in this function)
+   84 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+19:08:11 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'I2CConfig':
+../Core/Src/main.c:52:9: error: 'tmpreg' undeclared (first use in this function); did you mean '_mprec'?
+   52 |         tmpreg = RCC->APB1ENR1;
+      |         ^~~~~~
+      |         _mprec
+../Core/Src/main.c:52:9: note: each undeclared identifier is reported only once for each function it appears in
+In file included from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:27,
+                 from ../Core/Inc/stm32l4xx_hal_conf.h:258,
+                 from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:8:
+../Core/Src/main.c:53:16: error: 'tmpref' undeclared (first use in this function); did you mean '_mprec'?
+   53 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+../Core/Src/main.c:74:21: error: 'I2C_ICR_CLEAR' undeclared (first use in this function); did you mean 'I2C_ISR_BERR'?
+   74 |         I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+      |                     ^~~~~~~~~~~~~
+      |                     I2C_ISR_BERR
+../Core/Src/main.c: In function 'GPIOPortConfig':
+../Core/Src/main.c:84:9: error: 'tmpreg' undeclared (first use in this function); did you mean '_mprec'?
+   84 |         tmpreg = RCC->AHB2ENR;
+      |         ^~~~~~
+      |         _mprec
+../Core/Src/main.c:85:16: error: 'tmpref' undeclared (first use in this function); did you mean '_mprec'?
+   85 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+19:08:19 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'I2CConfig':
+../Core/Src/main.c:52:9: error: 'tmpreg' undeclared (first use in this function)
+   52 |         tmpreg = RCC->APB1ENR1;
+      |         ^~~~~~
+../Core/Src/main.c:52:9: note: each undeclared identifier is reported only once for each function it appears in
+In file included from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:27,
+                 from ../Core/Inc/stm32l4xx_hal_conf.h:258,
+                 from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:8:
+../Core/Src/main.c:53:16: error: 'tmpref' undeclared (first use in this function)
+   53 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+../Core/Src/main.c:74:21: error: 'I2C_ICR_CLEAR' undeclared (first use in this function); did you mean 'I2C_ISR_BERR'?
+   74 |         I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+      |                     ^~~~~~~~~~~~~
+      |                     I2C_ISR_BERR
+../Core/Src/main.c: In function 'GPIOPortConfig':
+../Core/Src/main.c:84:9: error: 'tmpreg' undeclared (first use in this function)
+   84 |         tmpreg = RCC->AHB2ENR;
+      |         ^~~~~~
+../Core/Src/main.c:85:16: error: 'tmpref' undeclared (first use in this function)
+   85 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+19:08:24 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'I2CConfig':
+../Core/Src/main.c:52:9: error: 'tmpreg' undeclared (first use in this function)
+   52 |         tmpreg = RCC->APB1ENR1;
+      |         ^~~~~~
+../Core/Src/main.c:52:9: note: each undeclared identifier is reported only once for each function it appears in
+In file included from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:27,
+                 from ../Core/Inc/stm32l4xx_hal_conf.h:258,
+                 from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:8:
+../Core/Src/main.c:53:16: error: 'tmpref' undeclared (first use in this function)
+   53 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+../Core/Src/main.c:74:21: error: 'I2C_ICR_CLEAR' undeclared (first use in this function); did you mean 'I2C_ISR_BERR'?
+   74 |         I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+      |                     ^~~~~~~~~~~~~
+      |                     I2C_ISR_BERR
+../Core/Src/main.c: In function 'GPIOPortConfig':
+../Core/Src/main.c:84:9: error: 'tmpreg' undeclared (first use in this function)
+   84 |         tmpreg = RCC->AHB2ENR;
+      |         ^~~~~~
+../Core/Src/main.c:85:16: error: 'tmpref' undeclared (first use in this function)
+   85 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+19:08:30 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'I2CConfig':
+../Core/Src/main.c:52:9: error: 'tmpreg' undeclared (first use in this function)
+   52 |         tmpreg = RCC->APB1ENR1;
+      |         ^~~~~~
+../Core/Src/main.c:52:9: note: each undeclared identifier is reported only once for each function it appears in
+In file included from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:27,
+                 from ../Core/Inc/stm32l4xx_hal_conf.h:258,
+                 from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:8:
+../Core/Src/main.c:53:16: error: 'tmpref' undeclared (first use in this function)
+   53 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+../Core/Src/main.c:74:21: error: 'I2C_ICR_CLEAR' undeclared (first use in this function); did you mean 'I2C_ISR_BERR'?
+   74 |         I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+      |                     ^~~~~~~~~~~~~
+      |                     I2C_ISR_BERR
+../Core/Src/main.c: In function 'GPIOPortConfig':
+../Core/Src/main.c:84:9: error: 'tmpreg' undeclared (first use in this function)
+   84 |         tmpreg = RCC->AHB2ENR;
+      |         ^~~~~~
+../Core/Src/main.c:85:16: error: 'tmpref' undeclared (first use in this function)
+   85 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+19:08:31 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'I2CConfig':
+../Core/Src/main.c:52:9: error: 'tmpreg' undeclared (first use in this function)
+   52 |         tmpreg = RCC->APB1ENR1;
+      |         ^~~~~~
+../Core/Src/main.c:52:9: note: each undeclared identifier is reported only once for each function it appears in
+In file included from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:27,
+                 from ../Core/Inc/stm32l4xx_hal_conf.h:258,
+                 from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:8:
+../Core/Src/main.c:53:16: error: 'tmpref' undeclared (first use in this function)
+   53 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+../Core/Src/main.c:74:21: error: 'I2C_ICR_CLEAR' undeclared (first use in this function); did you mean 'I2C_ISR_BERR'?
+   74 |         I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+      |                     ^~~~~~~~~~~~~
+      |                     I2C_ISR_BERR
+../Core/Src/main.c: In function 'GPIOPortConfig':
+../Core/Src/main.c:84:9: error: 'tmpreg' undeclared (first use in this function)
+   84 |         tmpreg = RCC->AHB2ENR;
+      |         ^~~~~~
+../Core/Src/main.c:85:16: error: 'tmpref' undeclared (first use in this function)
+   85 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+19:09:32 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+In file included from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:27,
+                 from ../Core/Inc/stm32l4xx_hal_conf.h:258,
+                 from ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:29,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:8:
+../Core/Src/main.c: In function 'I2CConfig':
+../Core/Src/main.c:55:16: error: 'tmpref' undeclared (first use in this function); did you mean 'tmpreg'?
+   55 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+../Core/Src/main.c:55:16: note: each undeclared identifier is reported only once for each function it appears in
+   55 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+../Core/Src/main.c:76:21: error: 'I2C_ICR_CLEAR' undeclared (first use in this function); did you mean 'I2C_ISR_BERR'?
+   76 |         I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+      |                     ^~~~~~~~~~~~~
+      |                     I2C_ISR_BERR
+../Core/Src/main.c: In function 'GPIOPortConfig':
+../Core/Src/main.c:87:16: error: 'tmpref' undeclared (first use in this function); did you mean 'tmpreg'?
+   87 |         UNUSED(tmpref);
+      |                ^~~~~~
+../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h:58:25: note: in definition of macro 'UNUSED'
+   58 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |                         ^
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+19:09:52 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'I2CConfig':
+../Core/Src/main.c:76:21: error: 'I2C_ICR_CLEAR' undeclared (first use in this function); did you mean 'I2C_ISR_BERR'?
+   76 |         I2C1->ICR = I2C_ICR_CLEAR; //clear I2C ICR masks
+      |                     ^~~~~~~~~~~~~
+      |                     I2C_ISR_BERR
+../Core/Src/main.c:76:21: note: each undeclared identifier is reported only once for each function it appears in
+make: *** [Core/Src/subdir.mk:37: Core/Src/main.o] Error 1
+"make -j14 all" terminated with exit code 2. Build might be incomplete.
+19:10:40 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32L476xx -c -I../Core/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc -I../Drivers/STM32L4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32L4xx/Include -I../Drivers/CMSIS/Include -I../FreeRTOS/include -I../FreeRTOS/ARM_CM4F -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "IMUTransceiverSTM32L476RG.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\Jonat\MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="IMUTransceiverSTM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: IMUTransceiverSTM32L476RG.elf
+ 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+arm-none-eabi-objdump -h -S IMUTransceiverSTM32L476RG.elf  > "IMUTransceiverSTM32L476RG.list"
+   text	   data	    bss	    dec	    hex	filename
+  11252	     24	  17224	  28500	   6f54	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
+Finished building: IMUTransceiverSTM32L476RG.list
+ 
+19:10:53 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+make -j14 all 
+arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
+   text	   data	    bss	    dec	    hex	filename
+  11252	     24	  17224	  28500	   6f54	IMUTransceiverSTM32L476RG.elf
+Finished building: default.size.stdout
+ 
