@@ -41,15 +41,15 @@ void vHeartbeat(void *pvParameters){
 	}
 }
 
-static void prvCreateTasks(void){
-	static uint32_t rate = 500; //Static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
-	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
-}
-
 void I2CConfig(void){
 	RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN;
 	tmpreg = RCC->APB1ENR1;
 	UNUSED(tmpref);
+}
+
+static void prvCreateTasks(void){
+	static uint32_t rate = 500; //Static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
+	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
 }
 
 void GPIOPortConfig(void){
@@ -59,17 +59,18 @@ void GPIOPortConfig(void){
 	GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk; // he starting value of MODER is like 111111111111111111111 so you need to mask to make sure the register you want is primed to set value
 	GPIOA->MODER |= GPIO_MODER_MODE8_0; //General output
 
-	//For I2C1
-	GPIOB->MODER &= ~(GPIO_MODER_MODE8_Msk | GPIO_MODER_MODE9_Msk);
-	GPIOB->MODER |= (GPIO_MODER_MODE8_1 | GPIO_MODER_MODE9_1); //Alternate Function
-	GPIOB->AFR[1] &= ~(GPIO_AFRH_AFSEL8_Msk | GPIO_AFRH_AFSEL9_Msk);
-	GPIOB->AFR[1] |= (GPIO_AFRH_AFSEL8_2 | GPIO_AFRH_AFSEL9_2); //AF4 (0100)
-	GPIOB->OTYPER |= GPIO_OTYPER_OT8 | GPIO_OTYPER_OT9; //Output type open-drain, needed for I2C because open-drain allows multiple devices to share SDA/SCL safely
-	GPIOB->PUPDR &= ~((GPIO_PUPDR_PUPD8_0) | (GPIO_PUPDR_PUPD9_0));
-	GPIOB->PUPDR |= (GPIO_PUPDR_PUPD8_0) | (GPIO_PUPDR_PUPD9_0); //PB8/PB9 pull-up register. We set output type to be open-drain,so we need a pull up resistor, also need external 4.7kOhms resistor, internal one too weak
-	GPIOB->OSPEEDR &= ~((GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9));
-	GPIOB->OSPEEDR |= (GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9); //Set speed to the highest cuz why not(11)
 
+	//SCL1 (can later adjust speed with OSPEEDR
+	GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk;
+	GPIOB->MODER |= GPIO_MODER_MODE8_1; //AF
+	GPIOB->AFR[2] &= ~GPIO_AFRH_AFSEL8_Msk;
+	GPIOB->AFR[2] |= GPIO_AFRH_AFSEL8_2; //AF4
+
+	//SCDA1
+	GPIOB->MODER &= ~GPIO_MODER_MODE9_Msk;
+	GPIOB->MODER |= GPIO_MODER_MODE9_1; //AF
+	GPIOB->AFR[2] &= ~GPIO_AFRH_AFSEL9_Msk;
+	GPIOB->AFR[2] |= GPIO_AFRH_AFSEL9_2; //AF4
 }
 
 void SystemClock_Config(void)

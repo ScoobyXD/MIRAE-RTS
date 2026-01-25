@@ -68,7 +68,7 @@ void GPIOPortConfig(void){
 	GPIOB->PUPDR &= ~((GPIO_PUPDR_PUPD8_0) | (GPIO_PUPDR_PUPD9_0));
 	GPIOB->PUPDR |= (GPIO_PUPDR_PUPD8_0) | (GPIO_PUPDR_PUPD9_0); //PB8/PB9 pull-up register. We set output type to be open-drain,so we need a pull up resistor, also need external 4.7kOhms resistor, internal one too weak
 	GPIOB->OSPEEDR &= ~((GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9));
-	GPIOB->OSPEEDR |= (GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9); //Set speed to the highest cuz why not(11)
+	GPIOB->OSPEEDR |= (GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9); //Set speed to the highest (11)
 
 }
 

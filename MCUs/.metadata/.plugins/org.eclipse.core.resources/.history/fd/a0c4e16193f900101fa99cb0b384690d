@@ -1,10 +1,10 @@
-//Pins
-//D7-PA_8-Heartbeat LED
-//D15-PB_8-SCL1
-//D14-PB_9-SDA1
+// Pins
+// D7-PA_8-Heartbeat LED
+// D15-PB_8-SCL1
+// D14-PB_9-SDA1
 
 #include "FreeRTOS.h"
-#include "task.h" //Used for FreeRTOS
+#include "task.h" // Used for FreeRTOS
 #include "main.h"
 
 void SystemClock_Config(void);
@@ -14,13 +14,13 @@ static void prvCreateTasks(void);
 void vHeartbeat(void *pvParameters);
 
 int main(void){
-  HAL_Init(); //Necessary for now
+  HAL_Init(); //necessary for now
   SystemClock_Config();
-  GPIOPortConfig();
+  GPIOPortBConfig();
   I2CConfig();
 
   prvCreateTasks();
-  vTaskStartScheduler(); //Actually runs rtos
+  vTaskStartScheduler(); // Actually runs rtos
 
   while(1){
 	  vApplicationTickHook();
@@ -34,41 +34,39 @@ void vHeartbeat(void *pvParameters){
 	uint32_t *rate = (uint32_t*)pvParameters;
 
 	for(;;){
-		GPIOA->ODR |= GPIO_ODR_OD8; //Turn on external LED PA_8 (pin D7)
+		GPIOA->ODR |= GPIO_ODR_OD8; // Turn on external LED PA_8 (pin D7)
 		vTaskDelay(pdMS_TO_TICKS(*rate));
-		GPIOA->ODR &= ~GPIO_ODR_OD8; //Turn off
+		GPIOA->ODR &= ~GPIO_ODR_OD8; // Turn off
 		vTaskDelay(pdMS_TO_TICKS(*rate));
 	}
 }
 
+void I2CConfig(void){
+
+	RCC->AHB1ENR |= RCC
+	RCC->APB1ENR1 |=
+}
+
 static void prvCreateTasks(void){
-	static uint32_t rate = 500; //Static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
+	static uint32_t rate = 500; //static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
 	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
 }
 
-void I2CConfig(void){
-	RCC->APB1ENR1 |= RCC_APB1ENR1_I2C1EN;
-	tmpreg = RCC->APB1ENR1;
-	UNUSED(tmpref);
-}
-
 void GPIOPortConfig(void){
-	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; //Turn on clock for AHB2 bus
-	tmpreg = RCC->AHB2ENR;
-	UNUSED(tmpref);
-	GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk; // he starting value of MODER is like 111111111111111111111 so you need to mask to make sure the register you want is primed to set value
-	GPIOA->MODER |= GPIO_MODER_MODE8_0; //General output
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; // Turn on clock for AHB2 bus
+	GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk; // The starting value of MODER is like 111111111111111111111 so you need to mask to make sure the register you want is primed to set value
+	GPIOA->MODER |= GPIO_MODER_MODE8_0; // General output
 
-	//For I2C1
-	GPIOB->MODER &= ~(GPIO_MODER_MODE8_Msk | GPIO_MODER_MODE9_Msk);
-	GPIOB->MODER |= (GPIO_MODER_MODE8_1 | GPIO_MODER_MODE9_1); //Alternate Function
-	GPIOB->AFR[1] &= ~(GPIO_AFRH_AFSEL8_Msk | GPIO_AFRH_AFSEL9_Msk);
-	GPIOB->AFR[1] |= (GPIO_AFRH_AFSEL8_2 | GPIO_AFRH_AFSEL9_2); //AF4 (0100)
-	GPIOB->OTYPER |= GPIO_OTYPER_OT8 | GPIO_OTYPER_OT9; //Output type open-drain, needed for I2C because open-drain allows multiple devices to share SDA/SCL safely
-	GPIOB->PUPDR &= ~((GPIO_PUPDR_PUPD8_0) | (GPIO_PUPDR_PUPD9_0));
-	GPIOB->PUPDR |= (GPIO_PUPDR_PUPD8_0) | (GPIO_PUPDR_PUPD9_0); //PB8/PB9 pull-up register. We set output type to be open-drain,so we need a pull up resistor, also need external 4.7kOhms resistor, internal one too weak
-	GPIOB->OSPEEDR &= ~((GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9));
-	GPIOB->OSPEEDR |= (GPIO_OSPEEDR_OSPEED8) | (GPIO_OSPEEDR_OSPEED9); //Set speed to the highest cuz why not(11)
+	GPIOB->MODER &= ~GPIO_MODER_MODE8_Msk; //SCL
+	GPIOB->MODER |= GPIO_MODER_MODE8_1;
+	//GPIOB->OSPEEDR can be configured later to adjust speed
+	GPIOB->AFR[0] &= ~GPIO_AFRL_AFSEL4_Msk;
+	GPIOB->AFR[0] |= GPIO_AFRL_AFSEL4_2;
+
+
+	GPIOB->MODER &= ~GPIO_MODER_MODE9_Msk; //SDA
+	GPIOB->MODER |= GPIO_MODER_MODE9_1;
+
 
 }
 

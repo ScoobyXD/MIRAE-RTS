@@ -1,6 +1,7 @@
-../Core/Src/main.c:13:5:main	8	static
-../Core/Src/main.c:28:13:prvCreateTasks	16	static
-../Core/Src/main.c:34:6:vHeartbeat	72	static
-../Core/Src/main.c:45:6:GPIOPortAConfig	4	static
-../Core/Src/main.c:51:6:SystemClock_Config	96	static
-../Core/Src/main.c:92:6:Error_Handler	4	static,ignoring_inline_asm
+../Core/Src/main.c:16:5:main	8	static
+../Core/Src/main.c:33:6:vHeartbeat	72	static
+../Core/Src/main.c:44:6:I2CConfig	4	static
+../Core/Src/main.c:48:13:prvCreateTasks	16	static
+../Core/Src/main.c:53:6:GPIOPortConfig	4	static
+../Core/Src/main.c:71:6:SystemClock_Config	96	static
+../Core/Src/main.c:112:6:Error_Handler	4	static,ignoring_inline_asm
