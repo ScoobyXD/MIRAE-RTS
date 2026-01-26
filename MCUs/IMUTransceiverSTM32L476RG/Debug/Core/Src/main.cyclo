@@ -1,7 +1,6 @@
 ../Core/Src/main.c:19:5:main	1
-../Core/Src/main.c:36:6:vHeartbeat	1
-../Core/Src/main.c:47:13:prvCreateTasks	1
-../Core/Src/main.c:52:6:I2CConfig	1
-../Core/Src/main.c:84:6:GPIOPortConfig	1
-../Core/Src/main.c:103:6:SystemClock_Config	4
-../Core/Src/main.c:144:6:Error_Handler	1
+../Core/Src/main.c:31:6:vHeartbeat	1
+../Core/Src/main.c:42:13:prvCreateTasks	1
+../Core/Src/main.c:49:6:GPIOPortConfig	1
+../Core/Src/main.c:59:6:SystemClock_Config	4
+../Core/Src/main.c:100:6:Error_Handler	1
