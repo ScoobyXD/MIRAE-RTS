@@ -1,0 +1,2 @@
+../Core/Src/Drivers/LSM6DS3.c:6:9:LSM6DS3_Init	2
+../Core/Src/Drivers/LSM6DS3.c:20:6:LSM6DS3_GyroAccelRead	1

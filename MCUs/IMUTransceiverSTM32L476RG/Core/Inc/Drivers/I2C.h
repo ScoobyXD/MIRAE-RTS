@@ -5,10 +5,11 @@
 #define UNUSED(X) (void)X
 #endif
 
-void I2C1_Config();
-void I2C1_Read();
-void I2C1_Write();
-void I2C1_MultiRead();
-void I2C1_ReadAll();
+#include <stdint.h>
+
+void I2C1_MultiRead(uint8_t devAddr, uint8_t regAddr, uint8_t *buf, uint8_t len);
+uint8_t I2C1_Read(uint8_t devAddr, uint8_t regAddr);
+void I2C1_Write(uint8_t devAddr, uint8_t regAddr, uint8_t data);
+void I2C1_Config(void);
 
 #endif

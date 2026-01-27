@@ -3,6 +3,99 @@
 
 volatile uint32_t tmpreg;
 
+
+void I2C1_MultiRead(uint8_t devAddr, uint8_t regAddr, uint8_t *buf, uint8_t len){
+    while(I2C1->ISR & I2C_ISR_BUSY);
+
+    // Write register address
+    I2C1->CR2 = (devAddr << 1) //i dont think i need this bevause we do it again later
+              | (1 << I2C_CR2_NBYTES_Pos);
+
+    I2C1->CR2 |= I2C_CR2_START;
+
+    while(!(I2C1->ISR & I2C_ISR_TXIS));
+    I2C1->TXDR = regAddr;
+
+    while(!(I2C1->ISR & I2C_ISR_TC));
+
+    // Read multiple bytes
+    I2C1->CR2 = (devAddr << 1)
+              | (len << I2C_CR2_NBYTES_Pos)
+              | I2C_CR2_RD_WRN
+              | I2C_CR2_AUTOEND;
+
+    I2C1->CR2 |= I2C_CR2_START;
+
+    for(uint8_t i=0; i<len; i++){
+    	while(!(I2C1->ISR & I2C_ISR_RXNE));
+    	buf[i] = I2C1->RXDR; //remember indexing already sets it to value of pointer, not the address
+    }
+
+    while(!(I2C1->ISR & I2C_ISR_STOPF));
+    I2C1->ICR = I2C_ICR_STOPCF;
+}
+
+
+uint8_t I2C1_Read(uint8_t devAddr, uint8_t regAddr){
+	uint8_t data;
+
+	while(I2C1->ISR & I2C_ISR_BUSY); //Wait until bus is free
+
+	// First: Write the register address (no AUTOEND - we need restart)
+	I2C1->CR2 = (devAddr << 1)
+			  | (1 << I2C_CR2_NBYTES_Pos);  // 1 byte (register addr)
+
+	I2C1->CR2 |= I2C_CR2_START;
+
+	while(!(I2C1->ISR & I2C_ISR_TXIS));
+	I2C1->TXDR = regAddr;
+
+	// Wait for transfer complete (TC), not STOPF since no AUTOEND
+	while(!(I2C1->ISR & I2C_ISR_TC));
+
+	// Second: Read 1 byte with repeated START
+	I2C1->CR2 = (devAddr << 1)
+			  | (1 << I2C_CR2_NBYTES_Pos)
+			  | I2C_CR2_RD_WRN             // Read mode
+			  | I2C_CR2_AUTOEND;
+
+	I2C1->CR2 |= I2C_CR2_START;            // Repeated START
+
+	// Wait for RXNE (data received)
+	while(!(I2C1->ISR & I2C_ISR_RXNE));
+	data = I2C1->RXDR;
+
+	// Wait for STOP
+	while(!(I2C1->ISR & I2C_ISR_STOPF));
+	I2C1->ICR = I2C_ICR_STOPCF;
+
+	return data;
+}
+
+
+void I2C1_Write(uint8_t devAddr, uint8_t regAddr, uint8_t data){
+
+	while(I2C1->ISR & I2C_ISR_BUSY); //Wait until bus is free
+
+	I2C1->CR2 = (devAddr << 1)           //7-bit addr shifted to bits [7:1]
+			  | (2 << I2C_CR2_NBYTES_Pos) //2 bytes to send (reg + data)
+			  | I2C_CR2_AUTOEND;          //Auto end after transfer
+
+	I2C1->CR2 |= I2C_CR2_START; //Start I2C
+
+	while(!(I2C1->ISR & I2C_ISR_TXIS)); // Wait for when TXIS is cleared (this register clears itself everytime it TXs)
+	I2C1->TXDR = regAddr;
+
+	// Wait for TXIS, send data
+	while(!(I2C1->ISR & I2C_ISR_TXIS));
+	I2C1->TXDR = data;
+
+	// Wait for STOPF (transfer complete)
+	while(!(I2C1->ISR & I2C_ISR_STOPF));
+	I2C1->ICR = I2C_ICR_STOPCF;  // Clear STOP flag
+}
+
+
 void I2C1_Config(void){
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN; //Turn on clock for AHB2 bus
 	tmpreg = RCC->AHB2ENR;

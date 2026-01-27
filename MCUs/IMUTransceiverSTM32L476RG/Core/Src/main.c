@@ -3,6 +3,7 @@
 //D15-PB_8-SCL1
 //D14-PB_9-SDA1
 
+#include <stdio.h>
 #include "stm32l476xx.h"
 #include "FreeRTOS.h"
 #include "task.h" //Used for FreeRTOS
@@ -21,6 +22,10 @@ int main(void){
   SystemClock_Config();
   GPIOPortConfig();
   I2C1_Config();
+  if(LSM6DS3_Init() != 0x69){
+	  //some kind of error but make sure program continues
+	  //print IMU was not initialized properly
+  }
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos
 
@@ -41,6 +46,14 @@ void vHeartbeat(void *pvParameters){
 		GPIOA->ODR &= ~GPIO_ODR_OD8; //Turn off
 		vTaskDelay(pdMS_TO_TICKS(*rate));
 	}
+}
+
+void vIMURead(void *pvParameters){
+	static LSM6DS3_Sample IMU_Sample;
+	LSM6DS3_Sample *s = &IMU_Sample;
+	LSM6DS3_GyroAccelRead(s);
+	printf("Gyro: gx=%d gy=%d gz=%d", s->gx, s->gy, s->gz);
+
 }
 
 void GPIOPortConfig(void){
