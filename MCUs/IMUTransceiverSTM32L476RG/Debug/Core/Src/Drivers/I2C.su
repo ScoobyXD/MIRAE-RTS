@@ -1,4 +1,4 @@
 ../Core/Src/Drivers/I2C.c:7:6:I2C1_MultiRead	24	static
 ../Core/Src/Drivers/I2C.c:39:9:I2C1_Read	24	static
-../Core/Src/Drivers/I2C.c:76:6:I2C1_Write	16	static
-../Core/Src/Drivers/I2C.c:99:6:I2C1_Config	4	static
+../Core/Src/Drivers/I2C.c:87:6:I2C1_Write	16	static
+../Core/Src/Drivers/I2C.c:110:6:I2C1_Config	4	static

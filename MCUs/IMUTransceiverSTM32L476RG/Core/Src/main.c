@@ -16,6 +16,7 @@ void GPIOPortConfig(void);
 void I2CConfig(void);
 static void prvCreateTasks(void);
 void vHeartbeat(void *pvParameters);
+void vIMURead();//void *pvParameters);
 
 int main(void){
   HAL_Init(); //Necessary for now
@@ -26,6 +27,7 @@ int main(void){
 	  //some kind of error but make sure program continues
 	  //print IMU was not initialized properly
   }
+  vIMURead();
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos
 
@@ -35,6 +37,7 @@ int main(void){
 static void prvCreateTasks(void){
 	static uint32_t rate = 500; //Static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
 	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
+	//xTaskCreate(vIMURead, "IMURead", 1024, NULL, 2, NULL);
 }
 
 void vHeartbeat(void *pvParameters){
@@ -48,11 +51,11 @@ void vHeartbeat(void *pvParameters){
 	}
 }
 
-void vIMURead(void *pvParameters){
-	static LSM6DS3_Sample IMU_Sample;
-	LSM6DS3_Sample *s = &IMU_Sample;
-	LSM6DS3_GyroAccelRead(s);
-	printf("Gyro: gx=%d gy=%d gz=%d", s->gx, s->gy, s->gz);
+void vIMURead(void){//void *pvParameters){
+	LSM6DS3_Sample IMU_Sample;
+	LSM6DS3_GyroAccelRead(&IMU_Sample);
+	printf("Gyro: gx=%d gy=%d gz=%d", IMU_Sample.gx, IMU_Sample.gy, IMU_Sample.gz);
+	printf("Accel: ax=%d ay=%d az=%d", IMU_Sample.ax, IMU_Sample.ay, IMU_Sample.az);
 
 }
 
@@ -101,7 +104,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK) // As RCC_MSIRANGE_X goes higher, you need to increase this. 4 wait states for 80MHz
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK) // As RCC_MSIRANGE_X goes higher, you need to increase this. 4 wait states for 80MHz because at that speed CPU much faster than flash memory can keep up with, so have it wait
   {
     Error_Handler();
   }

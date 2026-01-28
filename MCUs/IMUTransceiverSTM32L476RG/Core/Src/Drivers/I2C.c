@@ -13,7 +13,7 @@ void I2C1_MultiRead(uint8_t devAddr, uint8_t regAddr, uint8_t *buf, uint8_t len)
 
     I2C1->CR2 |= I2C_CR2_START;
 
-    while(!(I2C1->ISR & I2C_ISR_TXIS));
+    while(!(I2C1->ISR & I2C_ISR_TXIS));//we want ISR to be 2 in order to get out of loop
     I2C1->TXDR = regAddr;
 
     while(!(I2C1->ISR & I2C_ISR_TC));
@@ -43,11 +43,22 @@ uint8_t I2C1_Read(uint8_t devAddr, uint8_t regAddr){
 
 	// First: Write the register address (no AUTOEND - we need restart)
 	I2C1->CR2 = (devAddr << 1)
-			  | (1 << I2C_CR2_NBYTES_Pos);  // 1 byte (register addr)
+			  | (1 << I2C_CR2_NBYTES_Pos); // 1 byte (register addr)
 
-	I2C1->CR2 |= I2C_CR2_START;
+	I2C1->CR2 |= I2C_CR2_START; //Send slave address + R/W bit to slave device and wait for an ack
 
-	while(!(I2C1->ISR & I2C_ISR_TXIS));
+	uint32_t timeout = 1000000;
+	while (!(I2C1->ISR & I2C_ISR_TXIS)) {
+	    //uint32_t isr = I2C1->ISR;
+
+	    //if (isr & I2C_ISR_NACKF) break;
+	   // if (isr & I2C_ISR_BERR)  break;
+	   // if (isr & I2C_ISR_ARLO)  break;
+	   // if (isr & I2C_ISR_TIMEOUT) break;
+	   // if (--timeout == 0) break;
+	}
+
+	//while(!(I2C1->ISR & I2C_ISR_TXIS)); //Any time you read a register, you’re working on a copy and with "if" statement, anytime result is not 0, then its true. Remember for every START its SDA goes low when SCL high and every devic on the bus sees this signal. Start and ACK are SDA pulled low.
 	I2C1->TXDR = regAddr;
 
 	// Wait for transfer complete (TC), not STOPF since no AUTOEND
@@ -120,7 +131,11 @@ void I2C1_Config(void){
 	// Keep analog filter ON (default), digital filter DNF=0 (default)
 	I2C1->CR1 &= ~I2C_CR1_ANFOFF; // 0 = analog filter enabled (This removes very short glitches/spikes (typical <50 ns) that could be mistaken as edges. You almost always leave it enabled)
 	I2C1->CR1 &= ~I2C_CR1_DNF;  // DNF = 0 digital filter off (I guess similar role of filtering random stuff but digitally?
-	RCC->CCIPR = RCC_CCIPR_I2C1SEL_1; //chose the HSI16 clock (16MHz), this is not the I2C SCL speed, its just the internal peripheral clock feeding the I2C timing generator
+	RCC->CCIPR = RCC_CCIPR_I2C1SEL_1;
+	//RCC->CR &= ~RCC_CR_HSION;
+	//RCC->CR |= RCC_CR_HSION;
+	//RCC->CCIPR &= ~RCC_CCIPR_I2C1SEL_1;
+	//RCC->CCIPR |= RCC_CCIPR_I2C1SEL_1; //chose the HSI16 clock (16MHz), this is not the I2C SCL speed, its just the internal peripheral clock feeding the I2C timing generator
 
 	//Configured I2C for 400kHz mode
 	I2C1->TIMINGR = //TIMINGR should be fully assigned, so = not |=
