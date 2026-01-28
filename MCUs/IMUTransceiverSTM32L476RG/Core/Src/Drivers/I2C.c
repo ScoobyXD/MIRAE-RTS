@@ -10,20 +10,15 @@ void I2C1_MultiRead(uint8_t devAddr, uint8_t regAddr, uint8_t *buf, uint8_t len)
     // Write register address
     I2C1->CR2 = (devAddr << 1) //i dont think i need this bevause we do it again later
               | (1 << I2C_CR2_NBYTES_Pos);
-
     I2C1->CR2 |= I2C_CR2_START;
-
-    while(!(I2C1->ISR & I2C_ISR_TXIS));//we want ISR to be 2 in order to get out of loop
+    while(!(I2C1->ISR & I2C_ISR_TXIS));
     I2C1->TXDR = regAddr;
 
     while(!(I2C1->ISR & I2C_ISR_TC));
-
-    // Read multiple bytes
     I2C1->CR2 = (devAddr << 1)
               | (len << I2C_CR2_NBYTES_Pos)
               | I2C_CR2_RD_WRN
               | I2C_CR2_AUTOEND;
-
     I2C1->CR2 |= I2C_CR2_START;
 
     for(uint8_t i=0; i<len; i++){
@@ -41,71 +36,63 @@ uint8_t I2C1_Read(uint8_t devAddr, uint8_t regAddr){
 
 	while(I2C1->ISR & I2C_ISR_BUSY); //Wait until bus is free
 
-	// First: Write the register address (no AUTOEND - we need restart)
+	//Handy rule list for AUTOEND & RELOAD:
+	//AUTOEND=1	STOP auto-generated
+	//AUTOEND=0, RELOAD=0	Check TC (you decide START or STOP)
+	//RELOAD=1	RELOAD 1 means after NBYTES are sent, pause to reprogram new NBYTES for next chunk. Controls how data bytes continue, must use same address, same direction, no start, no stop, just more bytes (you must reload NBYTES and use TCR in ISR)
+
+	//First START: Write to slave address, ack, TXIS flag gets set, then TXDR register address
+	//We keep AUTOEND and RELOAD 0 because there is no STOP, we dont want to lose control of the bus so no AUTOEND and we will do a direction change from initial write to read so no RELOAD
 	I2C1->CR2 = (devAddr << 1)
-			  | (1 << I2C_CR2_NBYTES_Pos); // 1 byte (register addr)
+			  | (1 << I2C_CR2_NBYTES_Pos); //1 byte (register addr), remember that slave address (devAddr) does not count as NBYTE data bytes
+	I2C1->CR2 |= I2C_CR2_START; //Generate and send I2C start signal (start signals are pull low while scl goes high), then send slave address+R/W bit to slave device, receive ACK/NACK from the slave, and process ACK/NACKF internally. If we get NACK then set NACKF on ISR, if ACK and rd_wrn = 0(write) and NBYTES > 0 then hardware sets TXIS = 1. Also every device on the bus sees this signal.
+	while (!(I2C1->ISR & I2C_ISR_TXIS)); //Back an ACK confirmation. If we get ACK after START, TXIS flag on ISR should be 1, meaning TXDR is empty and ready to be filled with data to send to slave. Also, any time you read a register as done here, you’re working on a copy, as long as result is not 0 then its true.
+	I2C1->TXDR = regAddr; //After the slave ACKs its address, the first data byte you send tells the slave which internal register you want to talk to, the slave stores that value as an internal register pointer. btw I2C RXDR/TXDR is only 8 bits long, thats why we have output high and low registers in IMU
 
-	I2C1->CR2 |= I2C_CR2_START; //Send slave address + R/W bit to slave device and wait for an ack
-
-	uint32_t timeout = 1000000;
-	while (!(I2C1->ISR & I2C_ISR_TXIS)) {
-	    //uint32_t isr = I2C1->ISR;
-
-	    //if (isr & I2C_ISR_NACKF) break;
-	   // if (isr & I2C_ISR_BERR)  break;
-	   // if (isr & I2C_ISR_ARLO)  break;
-	   // if (isr & I2C_ISR_TIMEOUT) break;
-	   // if (--timeout == 0) break;
-	}
-
-	//while(!(I2C1->ISR & I2C_ISR_TXIS)); //Any time you read a register, you’re working on a copy and with "if" statement, anytime result is not 0, then its true. Remember for every START its SDA goes low when SCL high and every devic on the bus sees this signal. Start and ACK are SDA pulled low.
-	I2C1->TXDR = regAddr;
-
-	// Wait for transfer complete (TC), not STOPF since no AUTOEND
-	while(!(I2C1->ISR & I2C_ISR_TC));
-
-	// Second: Read 1 byte with repeated START
-	I2C1->CR2 = (devAddr << 1)
+	while(!(I2C1->ISR & I2C_ISR_TC)); //Wait for transfer complete, this flag is set by hardware only when RELOAD=0, AUTOEND=0 and NBYTES data have been transferred
+	I2C1->CR2 = (devAddr << 1) //Second START: Read 1 byte with repeated START. Repeated STARTS lets you change read/write direction and new NBYTES (you can have multiple starts without a stop, master never releases bus)
 			  | (1 << I2C_CR2_NBYTES_Pos)
-			  | I2C_CR2_RD_WRN             // Read mode
-			  | I2C_CR2_AUTOEND;
+			  | I2C_CR2_RD_WRN //Read mode
+			  | I2C_CR2_AUTOEND; //AUTOEND 1 means when NBYTES reaches 0 automatically generate STOP. We actually want to let go of bus after this read.
+	I2C1->CR2 |= I2C_CR2_START; //As the master, you really do tell the slave what to do, when to start, what registers to point to next, sends requests for what data it wants, etc
 
-	I2C1->CR2 |= I2C_CR2_START;            // Repeated START
-
-	// Wait for RXNE (data received)
-	while(!(I2C1->ISR & I2C_ISR_RXNE));
+	while(!(I2C1->ISR & I2C_ISR_RXNE)); //Wait for RXNE (data received)
 	data = I2C1->RXDR;
 
-	// Wait for STOP
-	while(!(I2C1->ISR & I2C_ISR_STOPF));
-	I2C1->ICR = I2C_ICR_STOPCF;
-
+	while(!(I2C1->ISR & I2C_ISR_STOPF)); // Wait for STOP (we set AUTOEND = 1 in 2nd start which will produce STOPF flag in ISR)
+	I2C1->ICR = ( //Clear flags in ICR (different from ISR)
+			I2C_ICR_NACKCF |
+			I2C_ICR_STOPCF |
+			I2C_ICR_BERRCF |
+			I2C_ICR_ARLOCF |
+			I2C_ICR_OVRCF |
+			I2C_ICR_TIMOUTCF);
 	return data;
 }
 
 
 void I2C1_Write(uint8_t devAddr, uint8_t regAddr, uint8_t data){
 
-	while(I2C1->ISR & I2C_ISR_BUSY); //Wait until bus is free
+	while(I2C1->ISR & I2C_ISR_BUSY);
 
-	I2C1->CR2 = (devAddr << 1)           //7-bit addr shifted to bits [7:1]
-			  | (2 << I2C_CR2_NBYTES_Pos) //2 bytes to send (reg + data)
-			  | I2C_CR2_AUTOEND;          //Auto end after transfer
-
-	I2C1->CR2 |= I2C_CR2_START; //Start I2C
-
-	while(!(I2C1->ISR & I2C_ISR_TXIS)); // Wait for when TXIS is cleared (this register clears itself everytime it TXs)
+	I2C1->CR2 = (devAddr << 1)
+			  | (2 << I2C_CR2_NBYTES_Pos) //2 bytes to send (regAddr + data)
+			  | I2C_CR2_AUTOEND;
+	I2C1->CR2 |= I2C_CR2_START;
+	while(!(I2C1->ISR & I2C_ISR_TXIS));
 	I2C1->TXDR = regAddr;
-
-	// Wait for TXIS, send data
 	while(!(I2C1->ISR & I2C_ISR_TXIS));
 	I2C1->TXDR = data;
 
-	// Wait for STOPF (transfer complete)
-	while(!(I2C1->ISR & I2C_ISR_STOPF));
-	I2C1->ICR = I2C_ICR_STOPCF;  // Clear STOP flag
+	while(!(I2C1->ISR & I2C_ISR_STOPF)); //Remember we set AUTOEND=1 so it will automatically do STOPF when TX is complete
+	I2C1->ICR = (
+				I2C_ICR_NACKCF |
+				I2C_ICR_STOPCF |
+				I2C_ICR_BERRCF |
+				I2C_ICR_ARLOCF |
+				I2C_ICR_OVRCF |
+				I2C_ICR_TIMOUTCF);
 }
-
 
 void I2C1_Config(void){
 	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOBEN; //Turn on clock for AHB2 bus
@@ -131,11 +118,12 @@ void I2C1_Config(void){
 	// Keep analog filter ON (default), digital filter DNF=0 (default)
 	I2C1->CR1 &= ~I2C_CR1_ANFOFF; // 0 = analog filter enabled (This removes very short glitches/spikes (typical <50 ns) that could be mistaken as edges. You almost always leave it enabled)
 	I2C1->CR1 &= ~I2C_CR1_DNF;  // DNF = 0 digital filter off (I guess similar role of filtering random stuff but digitally?
-	RCC->CCIPR = RCC_CCIPR_I2C1SEL_1;
-	//RCC->CR &= ~RCC_CR_HSION;
-	//RCC->CR |= RCC_CR_HSION;
-	//RCC->CCIPR &= ~RCC_CCIPR_I2C1SEL_1;
-	//RCC->CCIPR |= RCC_CCIPR_I2C1SEL_1; //chose the HSI16 clock (16MHz), this is not the I2C SCL speed, its just the internal peripheral clock feeding the I2C timing generator
+
+
+	RCC->CCIPR &= ~RCC_CCIPR_I2C1SEL_1;
+	RCC->CCIPR |= RCC_CCIPR_I2C1SEL_1; //Choose the HSI16 clock (16MHz), this is not the I2C SCL speed, its just the internal peripheral clock feeding the I2C timing generator
+	RCC->CR &= ~RCC_CR_HSION;
+	RCC->CR |= RCC_CR_HSION; //Turn on HSI clock
 
 	//Configured I2C for 400kHz mode
 	I2C1->TIMINGR = //TIMINGR should be fully assigned, so = not |=

@@ -36,7 +36,7 @@ typedef struct{
 	int16_t ax, ay, az;
 }LSM6DS3_Sample;
 
-uint8_t LSM6DS3_Init(void);      // Returns WHO_AM_I value (0x69 = success)
+void LSM6DS3_Init(void);      // Returns WHO_AM_I value (0x69 = success)
 void LSM6DS3_GyroAccelRead(LSM6DS3_Sample *data);
 
 //rounding pg 58?

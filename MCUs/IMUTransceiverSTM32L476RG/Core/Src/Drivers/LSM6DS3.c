@@ -1,17 +1,20 @@
-#include "Drivers/LSM6DS3.h"
+#include <stdio.h>
 #include "stm32l476xx.h"
+#include "Drivers/LSM6DS3.h"
 #include "Drivers/I2C.h"
 
 
-uint8_t LSM6DS3_Init(void){
+void LSM6DS3_Init(void){
 	uint8_t result = I2C1_Read(LSM6DS3_ADDR, WHO_AM_I);
 	if(result == 0x69){
 		I2C1_Write(LSM6DS3_ADDR, CTRL1_XL, 0x70); //Acceleration 833Hz sampling rate, 2g before saturation, 400Hz in changes per second
 		I2C1_Write(LSM6DS3_ADDR, CTRL2_G, 0x60); //Gyroscope 416Hz sampling rate, 250 dps
 		I2C1_Write(LSM6DS3_ADDR, CTRL3_C, 0x44); //Enable block data update (read MSB & LSB first then write into register) and auto increment addresses while reading multiple bytes
-		return result;
+		printf("Successfully initialized LSM6DS3 IMU");
 	}
-	return result;
+	else{
+		printf("Failed to initialize LSM6DS3 IMU");
+	}
 }
 
 

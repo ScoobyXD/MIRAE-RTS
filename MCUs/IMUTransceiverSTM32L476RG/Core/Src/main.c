@@ -18,16 +18,15 @@ static void prvCreateTasks(void);
 void vHeartbeat(void *pvParameters);
 void vIMURead();//void *pvParameters);
 
+//static LSM6DS3_Sample IMU_Sample;
+
 int main(void){
   HAL_Init(); //Necessary for now
   SystemClock_Config();
   GPIOPortConfig();
   I2C1_Config();
-  if(LSM6DS3_Init() != 0x69){
-	  //some kind of error but make sure program continues
-	  //print IMU was not initialized properly
-  }
-  vIMURead();
+  LSM6DS3_Init();
+
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos
 
@@ -37,7 +36,7 @@ int main(void){
 static void prvCreateTasks(void){
 	static uint32_t rate = 500; //Static variables dont live on stack, they get permanent address in .data or .bss section that persists for the whole program
 	xTaskCreate(vHeartbeat, "Heartbeat", 128, (void*)&rate, 1, NULL);
-	//xTaskCreate(vIMURead, "IMURead", 1024, NULL, 2, NULL);
+	xTaskCreate(vIMURead, "IMURead", 1024, NULL, 2, NULL);
 }
 
 void vHeartbeat(void *pvParameters){
@@ -51,12 +50,14 @@ void vHeartbeat(void *pvParameters){
 	}
 }
 
-void vIMURead(void){//void *pvParameters){
+void vIMURead(void *pvParameters){
 	LSM6DS3_Sample IMU_Sample;
-	LSM6DS3_GyroAccelRead(&IMU_Sample);
-	printf("Gyro: gx=%d gy=%d gz=%d", IMU_Sample.gx, IMU_Sample.gy, IMU_Sample.gz);
-	printf("Accel: ax=%d ay=%d az=%d", IMU_Sample.ax, IMU_Sample.ay, IMU_Sample.az);
 
+	for(;;){
+		LSM6DS3_GyroAccelRead(&IMU_Sample);
+		printf("Gyro: gx=%d gy=%d gz=%d", IMU_Sample.gx, IMU_Sample.gy, IMU_Sample.gz);
+		printf("Accel: ax=%d ay=%d az=%d", IMU_Sample.ax, IMU_Sample.ay, IMU_Sample.az);
+	}
 }
 
 void GPIOPortConfig(void){
