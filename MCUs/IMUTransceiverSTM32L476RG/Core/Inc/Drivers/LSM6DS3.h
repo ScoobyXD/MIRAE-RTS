@@ -1,5 +1,6 @@
 #ifndef LSM6DS3_H_
 #define LSM6DS3_H_
+#endif
 
 #include "stm32l476xx.h" //do i need this?
 #include <stdint.h>
@@ -42,4 +43,4 @@ void LSM6DS3_GyroAccelRead(LSM6DS3_Sample *data);
 //rounding pg 58?
 //temp?
 //external magnetometer?
-#endif
+

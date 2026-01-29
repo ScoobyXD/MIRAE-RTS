@@ -1,5 +1,6 @@
 #ifndef I2C_H_
 #define I2C_H_
+#endif
 
 #ifndef UNUSED
 #define UNUSED(X) (void)X
@@ -12,4 +13,4 @@ uint8_t I2C1_Read(uint8_t devAddr, uint8_t regAddr);
 void I2C1_Write(uint8_t devAddr, uint8_t regAddr, uint8_t data);
 void I2C1_Config(void);
 
-#endif
+

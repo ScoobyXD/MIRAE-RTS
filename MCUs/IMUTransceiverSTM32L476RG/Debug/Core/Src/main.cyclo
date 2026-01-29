@@ -2,6 +2,6 @@
 ../Core/Src/main.c:36:13:prvCreateTasks	1
 ../Core/Src/main.c:42:6:vHeartbeat	1
 ../Core/Src/main.c:53:6:vIMURead	1
-../Core/Src/main.c:63:6:GPIOPortConfig	1
-../Core/Src/main.c:73:6:SystemClock_Config	4
-../Core/Src/main.c:114:6:Error_Handler	1
+../Core/Src/main.c:64:6:GPIOPortConfig	1
+../Core/Src/main.c:74:6:SystemClock_Config	4
+../Core/Src/main.c:115:6:Error_Handler	1
