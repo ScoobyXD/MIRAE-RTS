@@ -10,9 +10,8 @@ Core/Src/main.o: ../Core/Src/main.c \
  ../FreeRTOS/include/projdefs.h ../FreeRTOS/include/portable.h \
  ../FreeRTOS/include/deprecated_definitions.h \
  ../FreeRTOS/ARM_CM4F/portmacro.h ../FreeRTOS/include/mpu_wrappers.h \
- ../FreeRTOS/include/task.h ../FreeRTOS/include/list.h \
- ../Core/Inc/Drivers/I2C.h ../Core/Inc/Drivers/lsm6ds3.h \
- ../Core/Inc/main.h ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
+ ../FreeRTOS/include/task.h ../FreeRTOS/include/list.h ../Core/Inc/main.h \
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h \
@@ -30,7 +29,9 @@ Core/Src/main.o: ../Core/Src/main.c \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ramfunc.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h \
- ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h \
+ ../Core/Inc/Drivers/I2C.h ../Core/Inc/Drivers/lsm6ds3.h \
+ ../Core/Inc/Drivers/USART.h
 ../Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l476xx.h:
 ../Drivers/CMSIS/Include/core_cm4.h:
 ../Drivers/CMSIS/Include/cmsis_version.h:
@@ -47,8 +48,6 @@ Core/Src/main.o: ../Core/Src/main.c \
 ../FreeRTOS/include/mpu_wrappers.h:
 ../FreeRTOS/include/task.h:
 ../FreeRTOS/include/list.h:
-../Core/Inc/Drivers/I2C.h:
-../Core/Inc/Drivers/lsm6ds3.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
@@ -69,3 +68,6 @@ Core/Src/main.o: ../Core/Src/main.c \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_flash_ramfunc.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h:
+../Core/Inc/Drivers/I2C.h:
+../Core/Inc/Drivers/lsm6ds3.h:
+../Core/Inc/Drivers/USART.h:

@@ -1,0 +1,2 @@
+../Core/Src/Drivers/USART.c:7:6:USART2_Config	4	static
+../Core/Src/Drivers/USART.c:45:6:USART2_Print	4	static

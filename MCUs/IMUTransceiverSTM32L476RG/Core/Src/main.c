@@ -7,13 +7,14 @@
 #include "stm32l476xx.h"
 #include "FreeRTOS.h"
 #include "task.h" //Used for FreeRTOS
+#include "main.h"
 #include "Drivers/I2C.h"
 #include "Drivers/lsm6ds3.h"
-#include "main.h"
+#include "Drivers/USART.h"
+
 
 void SystemClock_Config(void);
 void GPIOPortConfig(void);
-void I2CConfig(void);
 static void prvCreateTasks(void);
 void vHeartbeat(void *pvParameters);
 void vIMURead();//void *pvParameters);
@@ -24,8 +25,10 @@ int main(void){
   HAL_Init(); //Necessary for now
   SystemClock_Config();
   GPIOPortConfig();
+  USART2_Config();
   I2C1_Config();
   LSM6DS3_Init();
+  USART2_Print();
 
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos

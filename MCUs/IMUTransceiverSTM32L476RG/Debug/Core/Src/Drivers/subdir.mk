@@ -6,15 +6,18 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../Core/Src/Drivers/I2C.c \
-../Core/Src/Drivers/LSM6DS3.c 
+../Core/Src/Drivers/LSM6DS3.c \
+../Core/Src/Drivers/USART.c 
 
 OBJS += \
 ./Core/Src/Drivers/I2C.o \
-./Core/Src/Drivers/LSM6DS3.o 
+./Core/Src/Drivers/LSM6DS3.o \
+./Core/Src/Drivers/USART.o 
 
 C_DEPS += \
 ./Core/Src/Drivers/I2C.d \
-./Core/Src/Drivers/LSM6DS3.d 
+./Core/Src/Drivers/LSM6DS3.d \
+./Core/Src/Drivers/USART.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -24,7 +27,7 @@ Core/Src/Drivers/%.o Core/Src/Drivers/%.su Core/Src/Drivers/%.cyclo: ../Core/Src
 clean: clean-Core-2f-Src-2f-Drivers
 
 clean-Core-2f-Src-2f-Drivers:
-	-$(RM) ./Core/Src/Drivers/I2C.cyclo ./Core/Src/Drivers/I2C.d ./Core/Src/Drivers/I2C.o ./Core/Src/Drivers/I2C.su ./Core/Src/Drivers/LSM6DS3.cyclo ./Core/Src/Drivers/LSM6DS3.d ./Core/Src/Drivers/LSM6DS3.o ./Core/Src/Drivers/LSM6DS3.su
+	-$(RM) ./Core/Src/Drivers/I2C.cyclo ./Core/Src/Drivers/I2C.d ./Core/Src/Drivers/I2C.o ./Core/Src/Drivers/I2C.su ./Core/Src/Drivers/LSM6DS3.cyclo ./Core/Src/Drivers/LSM6DS3.d ./Core/Src/Drivers/LSM6DS3.o ./Core/Src/Drivers/LSM6DS3.su ./Core/Src/Drivers/USART.cyclo ./Core/Src/Drivers/USART.d ./Core/Src/Drivers/USART.o ./Core/Src/Drivers/USART.su
 
 .PHONY: clean-Core-2f-Src-2f-Drivers
 

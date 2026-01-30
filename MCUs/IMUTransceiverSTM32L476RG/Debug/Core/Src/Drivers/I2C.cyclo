@@ -1,4 +1,4 @@
-../Core/Src/Drivers/I2C.c:7:6:I2C1_MultiRead	7
-../Core/Src/Drivers/I2C.c:34:9:I2C1_Read	6
-../Core/Src/Drivers/I2C.c:74:6:I2C1_Write	5
-../Core/Src/Drivers/I2C.c:97:6:I2C1_Config	1
+../Core/Src/Drivers/I2C.c:8:6:I2C1_MultiRead	7
+../Core/Src/Drivers/I2C.c:35:9:I2C1_Read	6
+../Core/Src/Drivers/I2C.c:75:6:I2C1_Write	5
+../Core/Src/Drivers/I2C.c:98:6:I2C1_Config	1

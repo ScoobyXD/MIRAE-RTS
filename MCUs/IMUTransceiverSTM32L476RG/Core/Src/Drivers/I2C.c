@@ -1,5 +1,6 @@
-#include "Drivers/I2C.h"
 #include "stm32l476xx.h"
+#include "Drivers/I2C.h"
+#include "Drivers/USART.h"
 
 volatile uint32_t tmpreg;
 
