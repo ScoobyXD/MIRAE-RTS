@@ -1,2 +1,2 @@
 ../Core/Src/Drivers/USART.c:7:6:USART2_Config	1
-../Core/Src/Drivers/USART.c:45:6:USART2_Print	1
+../Core/Src/Drivers/USART.c:48:6:USART2_Print	2

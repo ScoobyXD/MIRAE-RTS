@@ -15,9 +15,10 @@ void USART2_Config(void) {
 	GPIOA->MODER |= GPIO_MODER_MODE2_1; //PA_2 (TX) 10 Alternate function
 	GPIOA->MODER &= ~GPIO_MODER_MODE3_Msk;
 	GPIOA->MODER |= GPIO_MODER_MODE3_1; //PA_3 (RX) 10 Alternate function
-
-	GPIOA->AFR[0] |= (0x7UL << 8U); //Alternate function 0111 (USART2) for PA_2
-	GPIOA->AFR[0] |= (0x7UL << 12U); //Alternate function 0111 (USART2) for PA_3
+	GPIOA->AFR[0] &= ~((0xFUL << 8U)|(0xFUL << 12U));
+	GPIOA->AFR[0] |= ((0x7UL << 8U)|(0x7UL << 12U)); //Alternate function 0111 (USART2) for PA_2 and Alternate function 0111 (USART2) for PA_3
+	GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPD2_Msk | GPIO_PUPDR_PUPD3_Msk);
+	GPIOA->PUPDR |= GPIO_PUPDR_PUPD3_0;
 
 	//do i need ospeed?
 
@@ -27,7 +28,9 @@ void USART2_Config(void) {
 	//USART2->CR1 &= ~USART_CR1_M0; (reset value)
 	//USART2->CR2 &= ~USART_CR2_STOP; //set n stop bits to 1 stop bit (also, keep in mind 0 for all of these are default) im just setting these here for learning reasons (reset value)
 
-	USART2->BRR = 80000000 / 115200; //80MHz/115200 baud = 694.44. UART frame is 1 bit every 694.4 APB1 clock cycles
+	USART2->CR1 &= ~USART_CR1_UE;
+	RCC->CCIPR |= RCC_CCIPR_USART2SEL_1; //HSI 16 MHz
+	USART2->BRR = 16000000 / 9600; //16MHz/9600 baud = 1666. change the rest of these commentsUART frame is 1 bit every 694.4 APB1 clock cycles
 								  //we set M[1:0] as 00 so 1 start bit, 8 data bits, and 1 end bit. 10 x 694.4 is 6944 clock cycles per word
 							      //if 80MHz that mean each uart bit is 12.5 nano seconds, so word takes 125 nano seconds, 8 million bytes per second at that rate, which by the way i think my math is off, thats higher than what uart can max on.
 
@@ -43,7 +46,8 @@ void USART2_Config(void) {
 }
 
 void USART2_Print(void){
-	USART2->TDR = 0x08;
+	while(!(USART2->ISR & USART_ISR_TXE));
+	USART2->TDR = 0x41;
 }
 
 
