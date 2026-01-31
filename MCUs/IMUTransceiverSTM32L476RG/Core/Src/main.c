@@ -22,13 +22,18 @@ void vIMURead();//void *pvParameters);
 //static LSM6DS3_Sample IMU_Sample;
 
 int main(void){
+  USART2_StringPrint("Hello World");
   HAL_Init(); //Necessary for now
   SystemClock_Config();
+  USART2_StringPrint("HAL initialized and Clock configed");
   GPIOPortConfig();
   USART2_Config();
   I2C1_Config();
   LSM6DS3_Init();
-  USART2_Print();
+  uint8_t test = 5;
+  uint8_t *n = &test;
+  USART2_Print(n);
+
 
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos

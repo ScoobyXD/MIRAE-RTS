@@ -11,5 +11,6 @@
 
 void USART2_Config(void);
 
-void USART2_Print(void);
+void USART2_Print(uint8_t *val);
+void USART2_StringPrint(const char *s);
 

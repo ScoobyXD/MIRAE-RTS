@@ -1,6 +1,7 @@
+#include <stdio.h>
+#include <stdint.h>
 #include <Drivers/USART.h>
 #include "stm32l476xx.h"
-#include <stdio.h>
 #include "Drivers/LSM6DS3.h"
 #include "Drivers/I2C.h"
 
@@ -18,7 +19,7 @@ void USART2_Config(void) {
 	GPIOA->AFR[0] &= ~((0xFUL << 8U)|(0xFUL << 12U));
 	GPIOA->AFR[0] |= ((0x7UL << 8U)|(0x7UL << 12U)); //Alternate function 0111 (USART2) for PA_2 and Alternate function 0111 (USART2) for PA_3
 	GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPD2_Msk | GPIO_PUPDR_PUPD3_Msk);
-	GPIOA->PUPDR |= GPIO_PUPDR_PUPD3_0;
+	GPIOA->PUPDR |= GPIO_PUPDR_PUPD3_0; //Only pull up RX, because UART TX pins are by default set high by hardware
 
 	//do i need ospeed?
 
@@ -45,9 +46,20 @@ void USART2_Config(void) {
 	//NVIC_SetIRQ(USART2_IRQn); //set up NVIC to allow USART2 interrupts. Now the hardware takes over so whenever RDR has data, the hardware will trigger the interrupt handler
 }
 
-void USART2_Print(void){
+void USART2_Print(uint8_t *val){
 	while(!(USART2->ISR & USART_ISR_TXE));
-	USART2->TDR = 0x41;
+	USART2->TDR = *val;
+
+
+	//will need USART_ISR_TC when its time to disable usart. TC obly used for when line fully idle
+}
+
+void USART2_StringPrint(const char *s) //remember that strings are const char[] arrarys, and array decays into pointers, so we can do USART2_Print2
+{
+    while (*s) {
+        while(!(USART2->ISR & USART_ISR_TXE)) {}
+        USART2->TDR = *s++;
+    }
 }
 
 
