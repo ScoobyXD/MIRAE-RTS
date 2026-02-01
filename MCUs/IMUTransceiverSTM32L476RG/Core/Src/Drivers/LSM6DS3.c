@@ -21,14 +21,19 @@ void LSM6DS3_Init(void){
 
 //The LSM6DS3 will keep providing the next byte as long as the master keeps ACKing and clocking SCL.
 //The master doesn’t “stop listening”; it ends the transaction by NACK + STOP (or STOP).
-void LSM6DS3_GyroAccelRead(LSM6DS3_Sample *data){
+void LSM6DS3_GyroAccelRead(LSM6DS3_SISample *data){
 	uint8_t buf[GyroAccelReadSize]; //It seems silly to copy 96 bits from IMU to MCU's buffer, then copy it again to data struct
 
 	I2C1_MultiRead(LSM6DS3_ADDR, OUTX_L_Gyro, buf, GyroAccelReadSize); //Starts reading at OUTX_L_Gyro then register increments by GyroAccelReadSize
-	data->gx = (uint16_t)(buf[1] << 8 | buf[0]);
-	data->gy = (uint16_t)(buf[3] << 8 | buf[2]);
-	data->gz = (uint16_t)(buf[5] << 8 | buf[4]);
-	data->ax = (uint16_t)(buf[7] << 8 | buf[6]);
-	data->ay = (uint16_t)(buf[9] << 8 | buf[8]);
-	data->az = (uint16_t)(buf[11] << 8 | buf[10]);
+	data->gx = (int16_t)(buf[1] << 8 | buf[0]) * (rawtorads);
+	data->gy = (int16_t)(buf[3] << 8 | buf[2]) * (rawtorads);
+	data->gz = (int16_t)(buf[5] << 8 | buf[4]) * (rawtorads);
+	data->ax = (int16_t)(buf[7] << 8 | buf[6]) * (rawtoms2);
+	data->ay = (int16_t)(buf[9] << 8 | buf[8]) * (rawtoms2);
+	data->az = (int16_t)(buf[11] << 8 | buf[10]) * (rawtoms2);
+
+	//if(data->gx & (0x01 << (0x1F)));
+
+
+	//USART2_PrintString("Im reading");
 }

@@ -32,13 +32,26 @@
 
 //later magnetometer OUT_MAG_RAW_X_L
 
+//These are straight from the datasheet
+#define LinAcc2g = 0.061f //Sensitivity for acceleration for FS = +- 2 (CTRL1_XL) 4/65536 = 0.061
+#define AngRate250dps = 8.75f //Sensitivity for gyroscope FS = +- 250 (CTRL2_G)
+#define ms2 9.80665f
+#define rads 0.0174533f
+#define rawtoms2 0.00059820f //LinAcc2g * ms2
+#define rawtorads 0.00015271f //AngRate250dps * rads
+
 typedef struct{
 	int16_t	gx, gy, gz;
 	int16_t ax, ay, az;
-}LSM6DS3_Sample;
+}LSM6DS3_RawSample;
+
+typedef struct{
+	float gx, gy, gz;
+	float ax, ay, az;
+}LSM6DS3_SISample;
 
 void LSM6DS3_Init(void);      // Returns WHO_AM_I value (0x69 = success)
-void LSM6DS3_GyroAccelRead(LSM6DS3_Sample *data);
+void LSM6DS3_GyroAccelRead(LSM6DS3_SISample *data);
 
 //rounding pg 58?
 //temp?

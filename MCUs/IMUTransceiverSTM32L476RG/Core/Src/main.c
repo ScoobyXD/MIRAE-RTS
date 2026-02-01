@@ -54,12 +54,13 @@ void vHeartbeat(void *pvParameters){
 }
 
 void vIMURead(void *pvParameters){
-	LSM6DS3_Sample IMU_Sample;
+	//LSM6DS3_RawSample IMU_Sample;
+	LSM6DS3_SISample IMU_SI_Sample;
 
 	for(;;){
-		LSM6DS3_GyroAccelRead(&IMU_Sample);
-		printf("Gyro: gx=%d gy=%d gz=%d", IMU_Sample.gx, IMU_Sample.gy, IMU_Sample.gz);
-		printf("Accel: ax=%d ay=%d az=%d", IMU_Sample.ax, IMU_Sample.ay, IMU_Sample.az);
+		LSM6DS3_GyroAccelRead(&IMU_SI_Sample);
+		//printf("Gyro: gx=%d gy=%d gz=%d", IMU_Sample.gx, IMU_Sample.gy, IMU_Sample.gz);
+		//printf("Accel: ax=%d ay=%d az=%d", IMU_Sample.ax, IMU_Sample.ay, IMU_Sample.az);
 		vTaskDelay(pdMS_TO_TICKS(50));
 	}
 }
