@@ -9,7 +9,7 @@
 //PA_3 Serial2_RX
 //timer
 
-void USART2_StringPrint(const char *s);
+void USART2_PrintString(const char *s);
 void USART2_Print(const char *val);
 void USART2_ThisWorksPrint(void);
 void USART2_Config(void);

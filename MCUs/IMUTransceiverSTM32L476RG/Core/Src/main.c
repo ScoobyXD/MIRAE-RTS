@@ -24,20 +24,11 @@ void vIMURead();//void *pvParameters);
 int main(void){
   HAL_Init(); //Necessary for now
   SystemClock_Config();
-
-  //SysTick->CTRL = 0;
   GPIOPortConfig();
-
-  //USART2_StringPrint("Hello World");
-  //USART2_StringPrint("HAL initialized and Clock configed");
   I2C1_Config();
   USART2_Config(); //I2C1_Config does the RCC->HSI 16MHz clock config, so I2C has to be initialized before USART
+  USART2_PrintString("All internal configs are complete, proceeding to peripherals ");
   LSM6DS3_Init();
-  //uint8_t test = 5;
-  //uint8_t *n = &test;
-  //USART2_Print(n);
-  USART2_StringPrint("Hello World");
-  USART2_ThisWorksPrint();
 
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos

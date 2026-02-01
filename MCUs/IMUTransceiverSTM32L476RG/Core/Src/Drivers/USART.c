@@ -5,7 +5,7 @@
 #include "Drivers/LSM6DS3.h"
 #include "Drivers/I2C.h"
 
-void USART2_StringPrint(const char *s) //remember that strings are const char[] arrarys, and array decays into pointers, so we can do USART2_Print2
+void USART2_PrintString(const char *s) //remember that strings are const char[] arrarys, and array decays into pointers, so we can do USART2_Print2
 {
 	uint8_t count = 0;
     while (*s) {

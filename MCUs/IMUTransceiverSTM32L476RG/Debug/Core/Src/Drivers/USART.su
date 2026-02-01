@@ -1,4 +1,4 @@
-../Core/Src/Drivers/USART.c:8:6:USART2_StringPrint	24	static
+../Core/Src/Drivers/USART.c:8:6:USART2_PrintString	24	static
 ../Core/Src/Drivers/USART.c:18:6:USART2_Print	16	static
 ../Core/Src/Drivers/USART.c:25:6:USART2_ThisWorksPrint	4	static
 ../Core/Src/Drivers/USART.c:30:6:USART2_Config	4	static
