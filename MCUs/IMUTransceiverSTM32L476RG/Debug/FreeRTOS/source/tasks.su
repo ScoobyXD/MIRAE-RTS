@@ -41,6 +41,7 @@
 ../FreeRTOS/source/tasks.c:6525:13:prvResetNextTaskUnblockTime	4	static
 ../FreeRTOS/source/tasks.c:6549:22:xTaskGetCurrentTaskHandle	16	static
 ../FreeRTOS/source/tasks.c:6584:18:xTaskGetCurrentTaskHandleForCore	24	static
+../FreeRTOS/source/tasks.c:6609:16:xTaskGetSchedulerState	16	static
 ../FreeRTOS/source/tasks.c:6649:16:xTaskPriorityInherit	32	static
 ../FreeRTOS/source/tasks.c:6752:16:xTaskPriorityDisinherit	32	static
 ../FreeRTOS/source/tasks.c:6846:10:vTaskPriorityDisinheritAfterTimeout	40	static

@@ -20,6 +20,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32l4xx_it.h"
+#include "FreeRTOS.h"
+#include "task.h" //Used for FreeRTOS
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -184,16 +187,13 @@ void DebugMon_Handler(void)
   * @brief This function handles System tick timer.
   */
  // commented because using FreeRTOS handlers instead (MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\Core\Inc\FreeRTOSConfig.h Line 56)
-// void SysTick_Handler(void)
-// {
-//   /* USER CODE BEGIN SysTick_IRQn 0 */
-
-//   /* USER CODE END SysTick_IRQn 0 */
-//   HAL_IncTick();
-//   /* USER CODE BEGIN SysTick_IRQn 1 */
-
-//   /* USER CODE END SysTick_IRQn 1 */
-// }
+void SysTick_Handler(void)
+{
+   HAL_IncTick();
+   if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
+	   xPortSysTickHandler();
+   }
+}
 
 /******************************************************************************/
 /* STM32L4xx Peripheral Interrupt Handlers                                    */

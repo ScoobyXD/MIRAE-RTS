@@ -24,7 +24,7 @@
 ../FreeRTOS/source/tasks.c:4224:13:uxTaskGetNumberOfTasks	1
 ../FreeRTOS/source/tasks.c:4236:8:pcTaskGetName	2
 ../FreeRTOS/source/tasks.c:4611:12:xTaskCatchUpTicks	1
-../FreeRTOS/source/tasks.c:4735:12:xTaskIncrementTick	13
+../FreeRTOS/source/tasks.c:4735:12:xTaskIncrementTick	12
 ../FreeRTOS/source/tasks.c:5119:10:vTaskSwitchContext	8
 ../FreeRTOS/source/tasks.c:5306:6:vTaskPlaceOnEventList	1
 ../FreeRTOS/source/tasks.c:5335:6:vTaskPlaceOnUnorderedEventList	1
@@ -41,6 +41,7 @@
 ../FreeRTOS/source/tasks.c:6525:13:prvResetNextTaskUnblockTime	2
 ../FreeRTOS/source/tasks.c:6549:22:xTaskGetCurrentTaskHandle	1
 ../FreeRTOS/source/tasks.c:6584:18:xTaskGetCurrentTaskHandleForCore	3
+../FreeRTOS/source/tasks.c:6609:16:xTaskGetSchedulerState	3
 ../FreeRTOS/source/tasks.c:6649:16:xTaskPriorityInherit	7
 ../FreeRTOS/source/tasks.c:6752:16:xTaskPriorityDisinherit	5
 ../FreeRTOS/source/tasks.c:6846:10:vTaskPriorityDisinheritAfterTimeout	8

@@ -8,7 +8,7 @@
 #define configUSE_PREEMPTION                    1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_IDLE_HOOK                     0
-#define configUSE_TICK_HOOK                     1
+#define configUSE_TICK_HOOK                     0
 #define configCPU_CLOCK_HZ                      80000000
 #define configTICK_RATE_HZ                      1000
 #define configMAX_PRIORITIES                    5
@@ -50,9 +50,11 @@
 #define INCLUDE_vTaskDelayUntil                 1
 #define INCLUDE_vTaskDelay                      1
 
+#define INCLUDE_xTaskGetSchedulerState  1 //Added this so SysTick_Handler() in stm32l4xx_it.c works
+
 /* Map FreeRTOS handlers to STM32 handlers */
 #define vPortSVCHandler     SVC_Handler
 #define xPortPendSVHandler  PendSV_Handler
-#define xPortSysTickHandler SysTick_Handler
+//#define xPortSysTickHandler SysTick_Handler //commented because caused USART2_PrintString("Hello World") to stop at "He" and program gets stuck. so were using Hal's SysTick_Handler instead of our own
 
 #endif

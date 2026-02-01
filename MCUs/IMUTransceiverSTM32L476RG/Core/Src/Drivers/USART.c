@@ -5,8 +5,29 @@
 #include "Drivers/LSM6DS3.h"
 #include "Drivers/I2C.h"
 
+void USART2_StringPrint(const char *s) //remember that strings are const char[] arrarys, and array decays into pointers, so we can do USART2_Print2
+{
+	uint8_t count = 0;
+    while (*s) {
+        while(!(USART2->ISR & USART_ISR_TXE));
+        USART2->TDR = *s++;
+        ++count;
+    }
+}
+
+void USART2_Print(const char *val){
+	while(!(USART2->ISR & USART_ISR_TXE));
+	USART2->TDR = *val;
+
+	//will need USART_ISR_TC when its time to disable usart. TC obly used for when line fully idle
+}
+
+void USART2_ThisWorksPrint(void){ //THIS WORKS
+	while(!(USART2->ISR & USART_ISR_TXE));
+	USART2->TDR = 0x59; //Prints a "Z"
+}
+
 void USART2_Config(void) {
-	//Port A already opened in TurretMotors_Config
 	RCC->APB1ENR1 &= ~RCC_APB1ENR1_USART2EN_Msk;
 	RCC->APB1ENR1 |= RCC_APB1ENR1_USART2EN; //start APB1 timer (didnt need AHB1 to open APB1)
 	//tmpreg = RCC->APB1ENR1;
@@ -29,8 +50,14 @@ void USART2_Config(void) {
 	//USART2->CR1 &= ~USART_CR1_M0; (reset value)
 	//USART2->CR2 &= ~USART_CR2_STOP; //set n stop bits to 1 stop bit (also, keep in mind 0 for all of these are default) im just setting these here for learning reasons (reset value)
 
-	USART2->CR1 &= ~USART_CR1_UE;
+	USART2->CR1 &= ~USART_CR1_UE; //Have to disable USART2 first before changing BRR and CCIPR
+
+	RCC->CR |= RCC_CR_HSION;
+	while (!(RCC->CR & RCC_CR_HSIRDY));  // Wait for stable
+
 	RCC->CCIPR |= RCC_CCIPR_USART2SEL_1; //HSI 16 MHz
+
+
 	USART2->BRR = 16000000 / 9600; //16MHz/9600 baud = 1666. change the rest of these commentsUART frame is 1 bit every 694.4 APB1 clock cycles
 								  //we set M[1:0] as 00 so 1 start bit, 8 data bits, and 1 end bit. 10 x 694.4 is 6944 clock cycles per word
 							      //if 80MHz that mean each uart bit is 12.5 nano seconds, so word takes 125 nano seconds, 8 million bytes per second at that rate, which by the way i think my math is off, thats higher than what uart can max on.
@@ -44,22 +71,11 @@ void USART2_Config(void) {
 						   //also keep in mind, bit 28 M1 word length default at 0, 1 start bit, 8 data bits, n stop bits.
 
 	//NVIC_SetIRQ(USART2_IRQn); //set up NVIC to allow USART2 interrupts. Now the hardware takes over so whenever RDR has data, the hardware will trigger the interrupt handler
+	while (!(USART2->ISR & USART_ISR_TEACK));
 }
 
-void USART2_Print(uint8_t *val){
-	while(!(USART2->ISR & USART_ISR_TXE));
-	USART2->TDR = *val;
 
 
-	//will need USART_ISR_TC when its time to disable usart. TC obly used for when line fully idle
-}
 
-void USART2_StringPrint(const char *s) //remember that strings are const char[] arrarys, and array decays into pointers, so we can do USART2_Print2
-{
-    while (*s) {
-        while(!(USART2->ISR & USART_ISR_TXE)) {}
-        USART2->TDR = *s++;
-    }
-}
 
 

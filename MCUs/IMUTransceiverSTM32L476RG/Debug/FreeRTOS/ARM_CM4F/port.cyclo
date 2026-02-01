@@ -7,6 +7,6 @@
 ../FreeRTOS/ARM_CM4F/port.c:475:6:vPortEnterCritical	1
 ../FreeRTOS/ARM_CM4F/port.c:492:6:vPortExitCritical	2
 ../FreeRTOS/ARM_CM4F/port.c:504:6:PendSV_Handler	1
-../FreeRTOS/ARM_CM4F/port.c:560:6:SysTick_Handler	2
+../FreeRTOS/ARM_CM4F/port.c:560:6:xPortSysTickHandler	2
 ../FreeRTOS/ARM_CM4F/port.c:812:32:vPortSetupTimerInterrupt	1
 ../FreeRTOS/ARM_CM4F/port.c:834:13:vPortEnableVFP	1
