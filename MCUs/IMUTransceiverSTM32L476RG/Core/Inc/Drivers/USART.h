@@ -9,6 +9,7 @@
 //PA_3 Serial2_RX
 //timer
 
+void FloatToString(float val, char *buf, int decimal_places);
 void USART2_PrintString(const char *s);
 void USART2_Print(const char *val);
 void USART2_ThisWorksPrint(void);

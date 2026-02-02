@@ -14,22 +14,149 @@
 
 
 void SystemClock_Config(void);
+void systick_init(uint32_t sys_clk_hz);
 void GPIOPortConfig(void);
 static void prvCreateTasks(void);
 void vHeartbeat(void *pvParameters);
 void vIMURead();//void *pvParameters);
 
 //static LSM6DS3_Sample IMU_Sample;
+////////////////////////////////////
+#include <stdarg.h>
+#include <stdint.h>
+
+// ---- globals ----
+volatile uint32_t ms_ticks = 0;
+
+// ---- SysTick ----
+
+void systick_init(uint32_t sys_clk_hz) {
+    SysTick->LOAD = (sys_clk_hz / 1000) - 1;
+    SysTick->VAL  = 0;
+    SysTick->CTRL = (1 << 2) | (1 << 1) | (1 << 0);
+}
+
+// ---- UART primitives ----
+void usart2_send_char(char c) {
+    while (!(USART2->ISR & (1 << 7)));
+    USART2->TDR = c;
+}
+
+void usart2_send_string(const char *s) {
+    while (*s) usart2_send_char(*s++);
+}
+
+// ---- conversions ----
+void uint_to_str(uint32_t val, char *buf) {
+    char tmp[12];
+    int i = 0;
+    if (val == 0) {
+        tmp[i++] = '0';
+    } else {
+        while (val > 0) {
+            tmp[i++] = '0' + (val % 10);
+            val /= 10;
+        }
+    }
+    for (int j = 0; j < i; j++)
+        buf[j] = tmp[i - 1 - j];
+    buf[i] = '\0';
+}
+
+void float_to_str(float val, char *buf, int decimal_places) {
+    int i = 0;
+    if (val < 0) {
+        buf[i++] = '-';
+        val = -val;
+    }
+    unsigned int int_part = (unsigned int)val;
+    float frac = val - (float)int_part;
+
+    char tmp[16];
+    int j = 0;
+    if (int_part == 0) {
+        tmp[j++] = '0';
+    } else {
+        while (int_part > 0) {
+            tmp[j++] = '0' + (int_part % 10);
+            int_part /= 10;
+        }
+    }
+    for (int k = j - 1; k >= 0; k--)
+        buf[i++] = tmp[k];
+
+    buf[i++] = '.';
+    for (int d = 0; d < decimal_places; d++) {
+        frac *= 10.0f;
+        int digit = (int)frac;
+        buf[i++] = '0' + digit;
+        frac -= (float)digit;
+    }
+    buf[i] = '\0';
+}
+
+// ---- printf ----
+void usart2_printf(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    char buf[32];
+
+    while (*fmt) {
+        if (*fmt == '%') {
+            fmt++;
+            switch (*fmt) {
+                case 'd': {
+                    int val = va_arg(args, int);
+                    if (val < 0) { usart2_send_char('-'); val = -val; }
+                    uint_to_str((uint32_t)val, buf);
+                    usart2_send_string(buf);
+                    break;
+                }
+                case 'u': {
+                    uint32_t val = va_arg(args, uint32_t);
+                    uint_to_str(val, buf);
+                    usart2_send_string(buf);
+                    break;
+                }
+                case 'f': {
+                    double val = va_arg(args, double);
+                    float_to_str((float)val, buf, 4);
+                    usart2_send_string(buf);
+                    break;
+                }
+                case 's': {
+                    char *s = va_arg(args, char *);
+                    usart2_send_string(s);
+                    break;
+                }
+                case '%': {
+                    usart2_send_char('%');
+                    break;
+                }
+                default:
+                    usart2_send_char('%');
+                    usart2_send_char(*fmt);
+                    break;
+            }
+        } else {
+            usart2_send_char(*fmt);
+        }
+        fmt++;
+    }
+    va_end(args);
+}
+
+///////////////
 
 int main(void){
   HAL_Init(); //Necessary for now
   SystemClock_Config();
+  systick_init(80000000);
   GPIOPortConfig();
   I2C1_Config();
   USART2_Config(); //I2C1_Config does the RCC->HSI 16MHz clock config, so I2C has to be initialized before USART
-  USART2_PrintString("All internal configs are complete, proceeding to peripherals ");
+  USART2_PrintString("All internal configs are complete, proceeding to peripherals.\r\n");
   LSM6DS3_Init();
-  USART2_ThisWorksPrint();
 
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos
@@ -60,9 +187,50 @@ void vIMURead(void *pvParameters){
 
 	for(;;){
 		LSM6DS3_GyroAccelRead(&IMU_SI_Sample);
-		//printf("Gyro: gx=%d gy=%d gz=%d", IMU_Sample.gx, IMU_Sample.gy, IMU_Sample.gz);
-		//printf("Accel: ax=%d ay=%d az=%d", IMU_Sample.ax, IMU_Sample.ay, IMU_Sample.az);
-		vTaskDelay(pdMS_TO_TICKS(50));
+
+		//usart2_printf("[%ums] val: %f\r\n", ms_ticks, IMU_SI_Sample.gx);
+
+		//char f2sBuf[32];
+		usart2_printf("[%ums]\r\n",ms_ticks);
+		usart2_printf("gx: %f\r\n",IMU_SI_Sample.gx);
+		usart2_printf("gy: %f\r\n",IMU_SI_Sample.gy);
+		usart2_printf("gz: %f\r\n",IMU_SI_Sample.gz);
+		usart2_printf("ax: %f\r\n",IMU_SI_Sample.ax);
+		usart2_printf("ay: %f\r\n",IMU_SI_Sample.ay);
+		usart2_printf("az: %f\r\n",IMU_SI_Sample.az);
+
+//		FloatToString(IMU_SI_Sample.gx, f2sBuf,7);
+//		USART2_PrintString("gx: ");
+//		USART2_PrintString(f2sBuf);
+//		USART2_PrintString("\r\n");
+//
+//		FloatToString(IMU_SI_Sample.gy, f2sBuf,7);
+//		USART2_PrintString("gy: ");
+//		USART2_PrintString(f2sBuf);
+//		USART2_PrintString("\r\n");
+//
+//		FloatToString(IMU_SI_Sample.gz, f2sBuf,7);
+//		USART2_PrintString("gz: ");
+//		USART2_PrintString(f2sBuf);
+//		USART2_PrintString("\r\n");
+//
+//		FloatToString(IMU_SI_Sample.ax, f2sBuf,7);
+//		USART2_PrintString("ax: ");
+//		USART2_PrintString(f2sBuf);
+//		USART2_PrintString("\r\n");
+//
+//		FloatToString(IMU_SI_Sample.ay, f2sBuf,7);
+//		USART2_PrintString("ay: ");
+//		USART2_PrintString(f2sBuf);
+//		USART2_PrintString("\r\n");
+//
+//		FloatToString(IMU_SI_Sample.az, f2sBuf,7);
+//		USART2_PrintString("az: ");
+//		USART2_PrintString(f2sBuf);
+//		USART2_PrintString("\r\n");
+//		USART2_PrintString("\r\n");
+
+		vTaskDelay(pdMS_TO_TICKS(500));
 	}
 }
 

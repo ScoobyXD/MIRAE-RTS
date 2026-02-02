@@ -11,10 +11,10 @@ void LSM6DS3_Init(void){
 		I2C1_Write(LSM6DS3_ADDR, CTRL1_XL, 0x70); //Acceleration 833Hz sampling rate, 2g before saturation, 400Hz in changes per second
 		I2C1_Write(LSM6DS3_ADDR, CTRL2_G, 0x60); //Gyroscope 416Hz sampling rate, 250 dps
 		I2C1_Write(LSM6DS3_ADDR, CTRL3_C, 0x44); //Enable block data update (read MSB & LSB first then write into register) and auto increment addresses while reading multiple bytes
-		USART2_PrintString("Successfully initialized LSM6DS3 IMU ");
+		USART2_PrintString("Successfully initialized LSM6DS3 IMU.\r\n");
 	}
 	else{
-		USART2_PrintString("Failed to initialize LSM6DS3 IMU ");
+		USART2_PrintString("Failed to initialize LSM6DS3 IMU.\r\n");
 	}
 }
 
@@ -31,10 +31,4 @@ void LSM6DS3_GyroAccelRead(LSM6DS3_SISample *data){
 	data->ax = (int16_t)(buf[7] << 8 | buf[6]) * (rawtoms2);
 	data->ay = (int16_t)(buf[9] << 8 | buf[8]) * (rawtoms2);
 	data->az = (int16_t)(buf[11] << 8 | buf[10]) * (rawtoms2);
-
-
-	//USART2_PrintString((const char*)(data->gx));
-
-
-	//USART2_PrintString("Im reading");
 }

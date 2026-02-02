@@ -189,10 +189,13 @@ void DebugMon_Handler(void)
  // commented because using FreeRTOS handlers instead (MIRAERTS\MCUs\IMUTransceiverSTM32L476RG\Core\Inc\FreeRTOSConfig.h Line 56)
 void SysTick_Handler(void)
 {
+   extern volatile uint32_t ms_ticks;
    HAL_IncTick();
+   ms_ticks++;
    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED) {
 	   xPortSysTickHandler();
    }
+
 }
 
 /******************************************************************************/

@@ -1,4 +1,5 @@
-../Core/Src/Drivers/USART.c:8:6:USART2_PrintString	3
-../Core/Src/Drivers/USART.c:16:6:USART2_Print	2
-../Core/Src/Drivers/USART.c:23:6:USART2_ThisWorksPrint	3
-../Core/Src/Drivers/USART.c:35:6:USART2_Config	3
+../Core/Src/Drivers/USART.c:9:6:FloatToString	6
+../Core/Src/Drivers/USART.c:50:6:USART2_PrintString	3
+../Core/Src/Drivers/USART.c:57:6:USART2_Print	2
+../Core/Src/Drivers/USART.c:64:6:USART2_ThisWorksPrint	2
+../Core/Src/Drivers/USART.c:69:6:USART2_Config	3

@@ -1,12 +1,53 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <Drivers/USART.h>
+#include "Drivers/USART.h"
 #include "stm32l476xx.h"
 #include "Drivers/LSM6DS3.h"
 #include "Drivers/I2C.h"
 
-void USART2_PrintString(const char *s) //remember that strings are const char[] arrarys, and array decays into pointers, so we can do USART2_Print2
-{
+// Convert float to string (minimal version)
+void FloatToString(float val, char *buf, int decimal_places){
+    int i = 0;
+
+    // handle negative
+    if (val < 0) {
+        buf[i++] = '-';
+        val = -val;
+    }
+
+    // integer part
+    unsigned int int_part = (unsigned int)val;
+    float frac = val - (float)int_part;
+
+    // convert integer part (reverse digits)
+    char tmp[16];
+    int j = 0;
+    if (int_part == 0) {
+        tmp[j++] = '0';
+    } else {
+        while (int_part > 0) {
+            tmp[j++] = '0' + (int_part % 10);
+            int_part /= 10;
+        }
+    }
+    // reverse into buf
+    for (int k = j - 1; k >= 0; k--) {
+        buf[i++] = tmp[k];
+    }
+
+    // decimal part
+    buf[i++] = '.';
+    for (int d = 0; d < decimal_places; d++) {
+        frac *= 10.0f;
+        int digit = (int)frac;
+        buf[i++] = '0' + digit;
+        frac -= (float)digit;
+    }
+
+    buf[i] = '\0';
+}
+
+void USART2_PrintString(const char *s){ //remember that strings are const char[] arrarys, and array decays into pointers, so we can do USART2_Print2
     while (*s) {
         while(!(USART2->ISR & USART_ISR_TXE));
         USART2->TDR = *s++;
@@ -21,15 +62,8 @@ void USART2_Print(const char *val){
 }
 
 void USART2_ThisWorksPrint(void){ //THIS WORKS
-	//while(!(USART2->ISR & USART_ISR_TXE));
-	//USART2->TDR = 0x59; //Prints a "Z"
-	uint8_t array[3] = {0x49,0x4A,0x4B};
-	for(uint8_t i = 0; i<3;i++){
-		while(!(USART2->ISR & USART_ISR_TXE));
-		USART2->TDR = array[i];
-	}
-
-
+	while(!(USART2->ISR & USART_ISR_TXE));
+	USART2->TDR = 0x5A; //Prints a "Z"
 }
 
 void USART2_Config(void) {
