@@ -29,6 +29,7 @@ int main(void){
   USART2_Config(); //I2C1_Config does the RCC->HSI 16MHz clock config, so I2C has to be initialized before USART
   USART2_PrintString("All internal configs are complete, proceeding to peripherals ");
   LSM6DS3_Init();
+  USART2_ThisWorksPrint();
 
   prvCreateTasks();
   vTaskStartScheduler(); //Actually runs rtos

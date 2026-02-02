@@ -7,11 +7,9 @@
 
 void USART2_PrintString(const char *s) //remember that strings are const char[] arrarys, and array decays into pointers, so we can do USART2_Print2
 {
-	uint8_t count = 0;
     while (*s) {
         while(!(USART2->ISR & USART_ISR_TXE));
         USART2->TDR = *s++;
-        ++count;
     }
 }
 
@@ -23,8 +21,15 @@ void USART2_Print(const char *val){
 }
 
 void USART2_ThisWorksPrint(void){ //THIS WORKS
-	while(!(USART2->ISR & USART_ISR_TXE));
-	USART2->TDR = 0x59; //Prints a "Z"
+	//while(!(USART2->ISR & USART_ISR_TXE));
+	//USART2->TDR = 0x59; //Prints a "Z"
+	uint8_t array[3] = {0x49,0x4A,0x4B};
+	for(uint8_t i = 0; i<3;i++){
+		while(!(USART2->ISR & USART_ISR_TXE));
+		USART2->TDR = array[i];
+	}
+
+
 }
 
 void USART2_Config(void) {

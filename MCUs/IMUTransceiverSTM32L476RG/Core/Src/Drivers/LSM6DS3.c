@@ -32,7 +32,8 @@ void LSM6DS3_GyroAccelRead(LSM6DS3_SISample *data){
 	data->ay = (int16_t)(buf[9] << 8 | buf[8]) * (rawtoms2);
 	data->az = (int16_t)(buf[11] << 8 | buf[10]) * (rawtoms2);
 
-	//if(data->gx & (0x01 << (0x1F)));
+
+	//USART2_PrintString((const char*)(data->gx));
 
 
 	//USART2_PrintString("Im reading");
