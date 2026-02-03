@@ -1,0 +1,16 @@
+/*
+ * I2C.h
+ *
+ *  Created on: Jan 26, 2026
+ *      Author: Jonat
+ */
+
+#ifndef I2C_H_
+#define I2C_H_
+
+void I2C1_Read();
+void I2C1_Write();
+void I2C1_MultiRead();
+void I2C1_ReadAll();
+
+#endif

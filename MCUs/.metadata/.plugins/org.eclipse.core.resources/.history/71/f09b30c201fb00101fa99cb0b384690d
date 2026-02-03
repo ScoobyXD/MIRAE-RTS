@@ -1,0 +1,8 @@
+#include "Drivers/LSM6DS3.h"
+#include "stm32l476xx.h"
+#include "Drivers/I2C.h"
+
+uint8_t LSM6DS3_Init(void){
+	I2C1_Write()
+
+}

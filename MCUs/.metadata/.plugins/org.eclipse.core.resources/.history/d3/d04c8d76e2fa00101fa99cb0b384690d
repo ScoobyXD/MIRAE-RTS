@@ -1,0 +1,15 @@
+#ifndef LSM6DS3_H_
+#define LSM6DS3_H_
+
+#include "stm32l476xx.h"
+#include <stdint.h>
+
+#define LSM6DS3_ADDR	0x06A //If SA0 connected to GND, if connected to VCC than 0x06B
+
+#define WHO_AM_I		0x0F //Should return 0x69
+#define CTRL1_XL		0xA0 //Highest performance, 6.66 kHz, 2g acceleration before saturation, 400Hz in acceleration changes per second
+#define
+
+
+
+#endif

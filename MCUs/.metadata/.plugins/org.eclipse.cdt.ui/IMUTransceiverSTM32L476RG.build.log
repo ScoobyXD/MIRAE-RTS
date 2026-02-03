@@ -1,10 +1,10 @@
-19:10:53 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
+10:59:58 **** Incremental Build of configuration Debug for project IMUTransceiverSTM32L476RG ****
 make -j14 all 
 arm-none-eabi-size  IMUTransceiverSTM32L476RG.elf 
    text	   data	    bss	    dec	    hex	filename
-  11252	     24	  17224	  28500	   6f54	IMUTransceiverSTM32L476RG.elf
+  28468	    480	  17560	  46508	   b5ac	IMUTransceiverSTM32L476RG.elf
 Finished building: default.size.stdout
  
 
-19:10:53 Build Finished. 0 errors, 0 warnings. (took 259ms)
+10:59:58 Build Finished. 0 errors, 0 warnings. (took 249ms)
 

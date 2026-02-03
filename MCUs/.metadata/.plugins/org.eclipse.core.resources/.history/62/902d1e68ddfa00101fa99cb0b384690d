@@ -1,0 +1,13 @@
+/*
+ * lsm6ds3.h
+ *
+ *  Created on: Jan 26, 2026
+ *      Author: Jonat
+ */
+
+#ifndef LSM6DS3_H_
+#define LSM6DS3_H_
+
+
+
+#endif /* LSM6DS3_H_ */

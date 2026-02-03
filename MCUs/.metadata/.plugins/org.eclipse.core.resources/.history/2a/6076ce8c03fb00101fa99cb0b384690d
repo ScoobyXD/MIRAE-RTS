@@ -1,0 +1,12 @@
+#include "Drivers/LSM6DS3.h"
+#include "stm32l476xx.h"
+#include "Drivers/I2C.h"
+
+uint8_t LSM6DS3_Init(void){
+	if(I2C1_Read(LSM6DS3_ADDR, WHO_AM_I) == 0x69){
+		I2C1_Write(LSM6DS3_ADDR, CTRL1_XL, 0x70); //Acceleration 833Hz sampling rate, 2g before saturation, 400Hz in changes per second
+		I2C1_Write(LSM6DS3_ADDR, CTRL2_G, 0x60); //Gyroscope 416Hz sampling rate, 250 dps
+		return 0x01;
+	}
+	return 0x00;
+}

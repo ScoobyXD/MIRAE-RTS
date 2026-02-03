@@ -1,0 +1,13 @@
+/*
+ * UART.h
+ *
+ *  Created on: Jan 29, 2026
+ *      Author: Jonat
+ */
+
+#ifndef INC_DRIVERS_UART_H_
+#define INC_DRIVERS_UART_H_
+
+
+
+#endif /* INC_DRIVERS_UART_H_ */

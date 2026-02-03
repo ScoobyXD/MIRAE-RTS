@@ -1,0 +1,114 @@
+//Pins
+//D7-PA_8-Heartbeat LED
+//D15-PB_8-SCL1
+//D14-PB_9-SDA1
+
+#include <stdio.h>
+#include "stm32l476xx.h"
+#include "FreeRTOS.h"
+#include "task.h" //Used for FreeRTOS
+#include "main.h"
+#include "Drivers/I2C.h"
+#include "Drivers/lsm6ds3.h"
+#include "Drivers/USART.h"
+
+
+void SystemClock_Config(void);
+void GPIOPortConfig(void);
+static void prvCreateTasks(void);
+void vHeartbeat(void *pvParameters);
+void vIMURead();//void *pvParameters);
+
+//static LSM6DS3_Sample IMU_Sample;
+
+int main(void){
+  HAL_Init(); //Necessary for now
+  SystemClock_Config();
+  GPIOPortConfig();
+
+  //USART2_StringPrint("Hello World");
+  //USART2_StringPrint("HAL initialized and Clock configed");
+  I2C1_Config();
+  USART2_Config(); //I2C1_Config does the RCC->HSI 16MHz clock config, so I2C has to be initialized before USART
+  LSM6DS3_Init();
+  //uint8_t test = 5;
+  //uint8_t *n = &test;
+  //USART2_Print(n);
+  USART2_StringPrint("Hello World");
+  USART2_ThisWorksPrint();
+
+
+  prvCreateTasks();
+  vTaskStartScheduler(); //Actually runs rtos
+
+  for(;;);
+}
+
+
+
+void GPIOPortConfig(void){
+	volatile uint32_t tmpreg;
+
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; //Turn on clock for AHB2 bus
+	tmpreg = RCC->AHB2ENR;
+	UNUSED(tmpreg);
+	GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk; //The starting value of MODER is like 111111111111111111111 so you need to mask to make sure the register you want is primed to set value
+	GPIOA->MODER |= GPIO_MODER_MODE8_0; //General output
+}
+
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  // Enable MSI and the PLL for 80MHz
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSICalibrationValue = 0;
+  RCC_OscInitStruct.MSIClockRange = RCC_CR_MSIRANGE_7; // Set to 8MHz. CubeIDE defaults project to RCC_CR_MSIRANGE_6 (4MHz). Internal RC oscillator (MSI) tops out at 48MHz.
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = 1; // 8MHz / 1 = 8MHz input to PLL
+  RCC_OscInitStruct.PLL.PLLN = 20; // 8MHz * 20 = 160MHz VCO
+  RCC_OscInitStruct.PLL.PLLR = 2; // 160MHz / 2 = 80MHz output
+  RCC_OscInitStruct.PLL.PLLP = 7;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
+
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  // Set clocks for 80MHz
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK; // Went from MSI to PLLCLK
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK) // As RCC_MSIRANGE_X goes higher, you need to increase this. 4 wait states for 80MHz because at that speed CPU much faster than flash memory can keep up with, so have it wait
+  {
+    Error_Handler();
+  }
+}
+
+void Error_Handler(void)
+{
+  __disable_irq();
+  while (1)
+  {
+  }
+}
+
+#ifdef  USE_FULL_ASSERT
+
+void assert_failed(uint8_t *file, uint32_t line)
+{
+
+}
+#endif

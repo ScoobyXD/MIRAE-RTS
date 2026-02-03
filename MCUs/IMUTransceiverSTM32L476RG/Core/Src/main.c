@@ -4,6 +4,8 @@
 //D14-PB_9-SDA1
 
 #include <stdio.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include "stm32l476xx.h"
 #include "FreeRTOS.h"
 #include "task.h" //Used for FreeRTOS
@@ -14,27 +16,14 @@
 
 
 void SystemClock_Config(void);
-void systick_init(uint32_t sys_clk_hz);
+void SysTick_Init(uint32_t sys_clk_hz);
 void GPIOPortConfig(void);
 static void prvCreateTasks(void);
 void vHeartbeat(void *pvParameters);
 void vIMURead();//void *pvParameters);
 
-//static LSM6DS3_Sample IMU_Sample;
-////////////////////////////////////
-#include <stdarg.h>
-#include <stdint.h>
 
-// ---- globals ----
 volatile uint32_t ms_ticks = 0;
-
-// ---- SysTick ----
-
-void systick_init(uint32_t sys_clk_hz) {
-    SysTick->LOAD = (sys_clk_hz / 1000) - 1;
-    SysTick->VAL  = 0;
-    SysTick->CTRL = (1 << 2) | (1 << 1) | (1 << 0);
-}
 
 // ---- UART primitives ----
 void usart2_send_char(char c) {
@@ -151,7 +140,7 @@ void usart2_printf(const char *fmt, ...) {
 int main(void){
   HAL_Init(); //Necessary for now
   SystemClock_Config();
-  systick_init(80000000);
+  SysTick_Init(80000000);
   GPIOPortConfig();
   I2C1_Config();
   USART2_Config(); //I2C1_Config does the RCC->HSI 16MHz clock config, so I2C has to be initialized before USART
@@ -242,6 +231,12 @@ void GPIOPortConfig(void){
 	UNUSED(tmpreg);
 	GPIOA->MODER &= ~GPIO_MODER_MODE8_Msk; //The starting value of MODER is like 111111111111111111111 so you need to mask to make sure the register you want is primed to set value
 	GPIOA->MODER |= GPIO_MODER_MODE8_0; //General output
+}
+
+void SysTick_Init(uint32_t sys_clk_hz) {
+    SysTick->LOAD = (sys_clk_hz / 1000) - 1;
+    SysTick->VAL  = 0;
+    SysTick->CTRL = (1 << 2) | (1 << 1) | (1 << 0);
 }
 
 void SystemClock_Config(void)
