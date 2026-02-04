@@ -1,0 +1,13 @@
+# Target labels
+ tfm
+# Source files and their labels
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/CMakeFiles/tfm
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/CMakeFiles/tfm.rule
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/CMakeFiles/tfm-complete.rule
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/tfm-prefix/src/tfm-stamp/tfm-build.rule
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/tfm-prefix/src/tfm-stamp/tfm-configure.rule
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/tfm-prefix/src/tfm-stamp/tfm-download.rule
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/tfm-prefix/src/tfm-stamp/tfm-install.rule
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/tfm-prefix/src/tfm-stamp/tfm-mkdir.rule
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/tfm-prefix/src/tfm-stamp/tfm-patch.rule
+C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker/modules/trusted-firmware-m/tfm-prefix/src/tfm-stamp/tfm-update.rule

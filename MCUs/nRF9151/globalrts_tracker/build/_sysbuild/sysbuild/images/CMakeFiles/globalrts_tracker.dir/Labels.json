@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/CMakeFiles/globalrts_tracker"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/CMakeFiles/globalrts_tracker.rule"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/CMakeFiles/globalrts_tracker-complete.rule"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/globalrts_tracker-prefix/src/globalrts_tracker-stamp/globalrts_tracker-build.rule"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/globalrts_tracker-prefix/src/globalrts_tracker-stamp/globalrts_tracker-configure.rule"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/globalrts_tracker-prefix/src/globalrts_tracker-stamp/globalrts_tracker-download.rule"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/globalrts_tracker-prefix/src/globalrts_tracker-stamp/globalrts_tracker-install.rule"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/globalrts_tracker-prefix/src/globalrts_tracker-stamp/globalrts_tracker-mkdir.rule"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/globalrts_tracker-prefix/src/globalrts_tracker-stamp/globalrts_tracker-patch.rule"
+		},
+		{
+			"file" : "C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/_sysbuild/sysbuild/images/globalrts_tracker-prefix/src/globalrts_tracker-stamp/globalrts_tracker-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"globalrts_tracker"
+		],
+		"name" : "globalrts_tracker"
+	}
+}
