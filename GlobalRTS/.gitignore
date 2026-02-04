@@ -1,17 +1,5 @@
-# Build output
-/target/
-
-# Data (don't commit telemetry or database)
-/data/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-
-# OS
+node_modules/
 .DS_Store
-Thumbs.db
-
-# API Keys
+*.log
+.env
 public/CONFIG.js

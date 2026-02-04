@@ -1688,12 +1688,9 @@
                 
                 healthContent.innerHTML = '<div class="health-loading">Loading health data...</div>';
                 
-                // Detect if we're running through the proxy server or directly
-                const isLocalServer = window.location.protocol === 'http:' && window.location.hostname === 'localhost';
-                const baseUrl = isLocalServer ? '/api/oura' : 'https://api.ouraring.com';
-                const headers = isLocalServer 
-                    ? { 'Accept': 'application/json' }
-                    : { 'Authorization': `Bearer ${OURA_TOKEN}`, 'Accept': 'application/json' };
+                // Always use server proxy to avoid CORS issues
+                const baseUrl = '/api/oura';
+                const headers = { 'Accept': 'application/json' };
                 
                 try {
                     // Fetch sleep data from Oura API
@@ -1755,8 +1752,7 @@
                     healthContent.innerHTML = `
                         <div class="health-error">
                             Failed to load health data.<br>
-                            <small>${error.message}</small><br><br>
-                            <small>Run: <code>./target/release/globalrts</code><br>Then open <code>http://localhost:3000</code></small>
+                            <small>${error.message}</small>
                         </div>
                     `;
                 }
@@ -1824,9 +1820,10 @@
             // ==========================================
             
             // WebSocket URL - configurable via CONFIG.SERVER_URL or auto-detect
+            // Uses wss:// for HTTPS pages, ws:// for HTTP
             const WS_URL = (typeof CONFIG !== 'undefined' && CONFIG.SERVER_URL) 
                 ? CONFIG.SERVER_URL 
-                : `ws://${window.location.host}`;
+                : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
             let socket = null;
             let serverConnected = false;
             const deviceEntities = new Map();
