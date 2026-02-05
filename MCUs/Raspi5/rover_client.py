@@ -228,7 +228,7 @@ class RoverClient:
         log.info(f"   WebSocket: {self.ws_url}")
         log.info(f"   HTTP:      {self.http_url}")
         
-        while self.running and not ws.close_code:
+        while self.running:
             try:
                 if HAS_WEBSOCKETS:
                     await self._run_websocket()
@@ -258,6 +258,9 @@ class RoverClient:
                 ping_interval=20,
                 ping_timeout=10,
                 close_timeout=5,
+                # Additional options for stability
+                max_size=2**20,  # 1MB max message
+                compression=None,  # Disable compression for lower latency
             ) as ws:
                 self.ws = ws
                 self.mode = ConnectionMode.WEBSOCKET
@@ -265,34 +268,64 @@ class RoverClient:
                 log.info("✅ WebSocket connected!")
                 
                 # Send identification
-                await ws.send(json.dumps({
+                identify_msg = json.dumps({
                     'type': 'rover:identify',
                     'data': {
                         'id': self.rover_id,
                         'name': self.rover_name,
                         'type': 'robot'
                     }
-                }))
+                })
+                log.debug(f"Sending identify: {identify_msg}")
+                await ws.send(identify_msg)
+                
+                # Wait for acknowledgment before starting telemetry
+                try:
+                    ack_msg = await asyncio.wait_for(ws.recv(), timeout=5.0)
+                    ack_data = json.loads(ack_msg)
+                    if ack_data.get('type') == 'ack':
+                        log.info(f"✅ Server acknowledged: {ack_data.get('data', {}).get('message', 'OK')}")
+                    else:
+                        log.warning(f"Unexpected first message: {ack_data.get('type')}")
+                        # Process it anyway
+                        await self._handle_server_message(ack_data)
+                except asyncio.TimeoutError:
+                    log.warning("No ack received, proceeding anyway")
                 
                 # Run telemetry sender and message receiver concurrently
-                await asyncio.gather(
+                # Use return_exceptions=True so one failing doesn't kill the other
+                results = await asyncio.gather(
                     self._ws_telemetry_loop(ws),
                     self._ws_receive_loop(ws),
+                    return_exceptions=True
                 )
+                
+                # Log any exceptions that occurred
+                for i, result in enumerate(results):
+                    if isinstance(result, Exception):
+                        task_name = ['telemetry_loop', 'receive_loop'][i]
+                        log.error(f"{task_name} exception: {result}")
+                        
         except ConnectionClosed as e:
-            log.warning(f"WebSocket closed: {e.code} {e.reason}")
+            log.warning(f"WebSocket closed: code={e.code} reason={e.reason}")
             self.stats['ws_disconnects'] += 1
         except WebSocketException as e:
-            log.error(f"WebSocket error: {e}")
+            log.error(f"WebSocket error: {type(e).__name__}: {e}")
+        except OSError as e:
+            log.error(f"Network error: {e}")
         except Exception as e:
-            log.error(f"WebSocket unexpected error: {e}")
+            log.error(f"WebSocket unexpected error: {type(e).__name__}: {e}")
+            import traceback
+            log.debug(traceback.format_exc())
         finally:
             self.ws = None
             self.mode = ConnectionMode.DISCONNECTED
     
     async def _ws_telemetry_loop(self, ws):
         """Send telemetry at regular intervals over WebSocket"""
-        while self.running and ws.open:
+        log.info(f"📡 Telemetry loop started (interval: {self.telemetry_interval}s)")
+        
+        while self.running and not ws.close_code:
             try:
                 msg = {
                     'type': 'rover:telemetry',
@@ -300,27 +333,38 @@ class RoverClient:
                 }
                 await ws.send(json.dumps(msg))
                 self.stats['telemetry_sent'] += 1
-                log.debug(f"📡 Telemetry sent via WS")
+                log.debug(f"📡 Telemetry #{self.stats['telemetry_sent']} sent via WS")
+            except ConnectionClosed as e:
+                log.warning(f"Telemetry send failed - connection closed: {e.code}")
+                break
             except Exception as e:
-                log.error(f"Telemetry send error: {e}")
+                log.error(f"Telemetry send error: {type(e).__name__}: {e}")
                 break
             
             await asyncio.sleep(self.telemetry_interval)
+        
+        log.info("📡 Telemetry loop ended")
     
     async def _ws_receive_loop(self, ws):
         """Receive and process messages from server over WebSocket"""
-        while self.running and ws.open:
+        log.info("📥 Receive loop started")
+        
+        while self.running and not ws.close_code:
             try:
                 message = await ws.recv()
+                log.debug(f"📥 Received: {message[:100]}...")
                 data = json.loads(message)
                 await self._handle_server_message(data)
-            except ConnectionClosed:
+            except ConnectionClosed as e:
+                log.warning(f"Receive loop - connection closed: {e.code}")
                 break
             except json.JSONDecodeError as e:
                 log.warning(f"Invalid JSON from server: {e}")
             except Exception as e:
-                log.error(f"Receive error: {e}")
+                log.error(f"Receive error: {type(e).__name__}: {e}")
                 break
+        
+        log.info("📥 Receive loop ended")
     
     async def _handle_server_message(self, msg: dict):
         """Process a message from the server"""
@@ -462,11 +506,11 @@ async def test_mode(client: RoverClient):
     import random
     
     # Start position: Los Angeles
-    lat = 34.0522
-    lon = -118.2437
-    heading = 0.0
-    enc_left = 0
-    enc_right = 0
+    lat = 12.1234
+    lon = 123.3214
+    heading = 1.0
+    enc_left = 2
+    enc_right = 3
     
     def handle_command(cmd: Command):
         nonlocal lat, lon
