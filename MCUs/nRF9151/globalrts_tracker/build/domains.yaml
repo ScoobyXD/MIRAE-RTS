@@ -1,7 +1,0 @@
-default: globalrts_tracker
-build_dir: C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build
-domains:
-  - name: globalrts_tracker
-    build_dir: C:/Users/Jonat/MIRAERTS/MCUs/nRF9151/globalrts_tracker/build/globalrts_tracker
-flash_order:
-  - globalrts_tracker
