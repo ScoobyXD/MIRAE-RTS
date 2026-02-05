@@ -142,7 +142,7 @@
 			(mirror no)
 			(drillshape 0)
 			(scaleselection 1)
-			(outputdirectory "JLCPCB Files/BOM/")
+			(outputdirectory "JLCPCB Files/Gerbers/")
 		)
 	)
 	(net 0 "")

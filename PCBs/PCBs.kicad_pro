@@ -522,7 +522,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "JLCPCB Files/BOM/",
+      "plot": "JLCPCB Files/Gerbers/",
       "pos_files": "JLCPCB Files/CPL Files/",
       "specctra_dsn": "",
       "step": "",

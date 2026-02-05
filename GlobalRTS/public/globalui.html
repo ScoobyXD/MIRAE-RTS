@@ -163,13 +163,23 @@
             z-index: 1000;
             font-size: 13px;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-width: 200px;
+            min-width: 240px;
+            max-height: 80vh;
+            overflow-y: auto;
             display: none;
         }
         #unitInfoBox h4 { margin: 0 0 10px 0; color: #00bcd4; font-size: 15px; }
-        #unitInfoBox .info-row { display: flex; justify-content: space-between; margin: 6px 0; }
+        #unitInfoBox .info-row { display: flex; justify-content: space-between; margin: 4px 0; }
         #unitInfoBox .info-label { color: #888; }
-        #unitInfoBox .info-value { color: #fff; font-family: monospace; }
+        #unitInfoBox .info-value { color: #fff; font-family: monospace; font-size: 12px; }
+        #unitInfoBox .info-section { margin-bottom: 8px; }
+        #unitInfoBox .info-section-header { 
+            color: #4fc3f7; 
+            font-size: 11px; 
+            margin: 10px 0 4px 0; 
+            padding-top: 6px;
+            border-top: 1px solid #333;
+        }
         
         #newsPanel {
             position: absolute;
@@ -789,14 +799,7 @@
             <span class="toggle-label">Robot Controller</span>
             <div class="toggle-switch active" id="toggleRobotController"></div>
         </div>
-        <div class="toggle-row">
-            <span class="toggle-label">Device Pairing</span>
-            <div class="toggle-switch" id="togglePairing"></div>
-        </div>
-        <div class="toggle-row">
-            <span class="toggle-label">Device Manager</span>
-            <div class="toggle-switch" id="toggleDevices"></div>
-        </div>
+
         <div class="toggle-row">
             <span class="toggle-label">Personal Health</span>
             <div class="toggle-switch" id="toggleHealth"></div>
@@ -807,43 +810,76 @@
         </div>
     </div>
     
-    <!-- Device Pairing Panel -->
-    <div id="pairingPanel">
-        <h4><span class="pairing-icon">🔗</span> DEVICE PAIRING</h4>
-        <div id="pairingContent">
-            <div class="pairing-empty">No pending pairing requests</div>
-        </div>
-    </div>
-    
-    <!-- Device Manager Panel -->
-    <div id="devicesPanel">
-        <h4><span class="devices-icon">📱</span> PAIRED DEVICES</h4>
-        <div id="devicesContent">
-            <div class="devices-empty">No paired devices</div>
-        </div>
-    </div>
+
     
     <div id="unitInfoBox">
         <h4 id="unitName">Robot Alpha</h4>
-        <div class="info-row">
-            <span class="info-label">Status</span>
-            <span class="info-value" id="unitStatus">Idle</span>
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="info-value" id="unitStatus">Idle</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Battery</span>
+                <span class="info-value" id="unitBattery">—</span>
+            </div>
         </div>
-        <div class="info-row">
-            <span class="info-label">Battery</span>
-            <span class="info-value" id="unitBattery">87%</span>
+        <div class="info-section-header">📍 GPS</div>
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">Latitude</span>
+                <span class="info-value" id="unitLat">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Longitude</span>
+                <span class="info-value" id="unitLon">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Altitude</span>
+                <span class="info-value" id="unitAltitude">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Accuracy</span>
+                <span class="info-value" id="unitAccuracy">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Speed</span>
+                <span class="info-value" id="unitSpeed">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Heading</span>
+                <span class="info-value" id="unitHeading">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">PDOP/HDOP</span>
+                <span class="info-value" id="unitDOP">—</span>
+            </div>
         </div>
-        <div class="info-row">
-            <span class="info-label">Speed</span>
-            <span class="info-value" id="unitSpeed">0 m/s</span>
+        <div class="info-section-header">🎯 IMU</div>
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">Accel X/Y/Z</span>
+                <span class="info-value" id="unitAccel">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Gyro X/Y/Z</span>
+                <span class="info-value" id="unitGyro">—</span>
+            </div>
         </div>
-        <div class="info-row">
-            <span class="info-label">Position</span>
-            <span class="info-value" id="unitPosition">—</span>
+        <div class="info-section-header">⚙️ Encoders</div>
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">Left / Right</span>
+                <span class="info-value" id="unitEncoders">—</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Velocity L/R</span>
+                <span class="info-value" id="unitEncVel">—</span>
+            </div>
         </div>
-        <div class="info-row">
-            <span class="info-label">Altitude</span>
-            <span class="info-value" id="unitAltitude">—</span>
+        <div class="info-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #333;">
+            <span class="info-label">Last Update</span>
+            <span class="info-value" id="unitLastUpdate">—</span>
         </div>
     </div>
     
@@ -1029,21 +1065,74 @@
                 if (unitObj.waypoint) unitObj.waypoint.show = true;
                 if (unitObj.pathLine) unitObj.pathLine.show = true;
                 
-                const props = unitObj.entity.properties;
-                const pos = unitObj.entity.position.getValue(viewer.clock.currentTime);
-                const carto = Cesium.Cartographic.fromCartesian(pos);
-                
-                document.getElementById('unitName').textContent = unitObj.entity.name;
-                document.getElementById('unitStatus').textContent = props.status.getValue();
-                document.getElementById('unitBattery').textContent = props.battery.getValue() + '%';
-                document.getElementById('unitSpeed').textContent = props.speed.getValue() + ' m/s';
-                document.getElementById('unitPosition').textContent = 
-                    Cesium.Math.toDegrees(carto.latitude).toFixed(4) + '°, ' +
-                    Cesium.Math.toDegrees(carto.longitude).toFixed(4) + '°';
-                document.getElementById('unitAltitude').textContent = carto.height.toFixed(1) + ' m';
+                updateUnitInfoBox(unitObj);
                 unitInfoBox.style.display = 'block';
                 document.getElementById('selectedUnits').textContent = unitObj.entity.name;
             }
+            
+            // Update unit info box with full telemetry data
+            function updateUnitInfoBox(unitObj) {
+                if (!unitObj) return;
+                
+                const props = unitObj.entity.properties;
+                const pos = unitObj.entity.position.getValue(viewer.clock.currentTime);
+                const carto = Cesium.Cartographic.fromCartesian(pos);
+                const data = unitObj.data || {};
+                const telemetry = data.telemetry || {};
+                const gps = telemetry.gps || {};
+                const imu = telemetry.imu || {};
+                const encoders = telemetry.encoders || {};
+                
+                document.getElementById('unitName').textContent = unitObj.entity.name;
+                
+                // Status
+                const status = props.status?.getValue?.() || props.status || 'unknown';
+                const battery = props.battery?.getValue?.() || props.battery || data.battery || 0;
+                document.getElementById('unitStatus').textContent = status;
+                document.getElementById('unitBattery').textContent = battery + '%';
+                
+                // GPS
+                const lat = Cesium.Math.toDegrees(carto.latitude);
+                const lon = Cesium.Math.toDegrees(carto.longitude);
+                document.getElementById('unitLat').textContent = lat.toFixed(6) + '°';
+                document.getElementById('unitLon').textContent = lon.toFixed(6) + '°';
+                document.getElementById('unitAltitude').textContent = (data.altitude || carto.height).toFixed(1) + ' m';
+                document.getElementById('unitAccuracy').textContent = (gps.accuracy || 0).toFixed(1) + ' m';
+                document.getElementById('unitSpeed').textContent = (data.speed || 0).toFixed(2) + ' m/s';
+                document.getElementById('unitHeading').textContent = (data.heading || 0).toFixed(1) + '°';
+                document.getElementById('unitDOP').textContent = 
+                    (gps.pdop || 0).toFixed(1) + ' / ' + (gps.hdop || 0).toFixed(1);
+                
+                // IMU
+                document.getElementById('unitAccel').textContent = 
+                    (imu.ax || 0) + ' / ' + (imu.ay || 0) + ' / ' + (imu.az || 0);
+                document.getElementById('unitGyro').textContent = 
+                    (imu.gx || 0) + ' / ' + (imu.gy || 0) + ' / ' + (imu.gz || 0);
+                
+                // Encoders
+                document.getElementById('unitEncoders').textContent = 
+                    (encoders.left || 0) + ' / ' + (encoders.right || 0);
+                document.getElementById('unitEncVel').textContent = 
+                    (encoders.leftVel || 0) + ' / ' + (encoders.rightVel || 0);
+                
+                // Last update time
+                const lastSeen = data.last_seen ? new Date(data.last_seen * 1000) : null;
+                document.getElementById('unitLastUpdate').textContent = lastSeen 
+                    ? lastSeen.toLocaleTimeString() 
+                    : '—';
+            }
+            
+            // Live update selected unit's info box
+            let liveUpdateInterval = null;
+            function startLiveUpdate() {
+                if (liveUpdateInterval) return;
+                liveUpdateInterval = setInterval(() => {
+                    if (selectedUnits.length > 0 && robotControllerEnabled) {
+                        updateUnitInfoBox(selectedUnits[0]);
+                    }
+                }, 500); // Update UI every 500ms
+            }
+            startLiveUpdate();
             
             function deselectAll() {
                 selectedUnits.forEach(u => {
@@ -2082,134 +2171,13 @@
             }
             
             // ==========================================
-            // DEVICE PAIRING PANEL
+            // SIMPLIFIED DEVICE PANEL FUNCTIONS (no UI panels needed)
             // ==========================================
-            const togglePairing = document.getElementById('togglePairing');
-            const pairingPanel = document.getElementById('pairingPanel');
-            const pairingContent = document.getElementById('pairingContent');
-            let pairingEnabled = false;
-            let pairingRequests = [];
             
-            togglePairing.addEventListener('click', () => {
-                togglePairing.classList.toggle('active');
-                pairingEnabled = togglePairing.classList.contains('active');
-                pairingPanel.style.display = pairingEnabled ? 'flex' : 'none';
-            });
-            
-            function updatePairingPanel(requests) {
-                pairingRequests = requests;
-                if (requests.length === 0) {
-                    pairingContent.innerHTML = '<div class="pairing-empty">No pending pairing requests</div>';
-                    return;
-                }
-                
-                const now = Math.floor(Date.now() / 1000);
-                pairingContent.innerHTML = requests.map(r => {
-                    const remaining = Math.max(0, r.expires_at - now);
-                    const mins = Math.floor(remaining / 60);
-                    const secs = remaining % 60;
-                    return `
-                        <div class="pairing-request" data-device-id="${r.device_id}">
-                            <button class="dismiss-btn" onclick="dismissPairing('${r.device_id}')">&times;</button>
-                            <div class="device-name">${r.name}</div>
-                            <div class="device-type">${r.device_type} • ${r.device_id}</div>
-                            <div class="code-display">${r.code}</div>
-                            <div class="expires">Expires in ${mins}:${secs.toString().padStart(2, '0')}</div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            window.dismissPairing = function(deviceId) {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({
-                        type: 'dismissPairing',
-                        data: { device_id: deviceId }
-                    }));
-                }
-                // Remove from local list immediately
-                pairingRequests = pairingRequests.filter(r => r.device_id !== deviceId);
-                updatePairingPanel(pairingRequests);
-            };
-            
-            // Update countdown timers every second
-            setInterval(() => {
-                if (pairingRequests.length > 0) {
-                    updatePairingPanel(pairingRequests);
-                }
-            }, 1000);
-            
-            // ==========================================
-            // DEVICE MANAGER PANEL
-            // ==========================================
-            const toggleDevices = document.getElementById('toggleDevices');
-            const devicesPanel = document.getElementById('devicesPanel');
-            const devicesContent = document.getElementById('devicesContent');
-            let devicesEnabled = false;
-            let pairedDevices = [];
-            
-            toggleDevices.addEventListener('click', () => {
-                toggleDevices.classList.toggle('active');
-                devicesEnabled = toggleDevices.classList.contains('active');
-                devicesPanel.style.display = devicesEnabled ? 'flex' : 'none';
-                if (devicesEnabled) {
-                    refreshDevicesPanel();
-                }
-            });
-            
-            function updateDevicesPanel(devices) {
-                pairedDevices = devices;
-                if (!devices || devices.length === 0) {
-                    devicesContent.innerHTML = '<div class="devices-empty">No paired devices</div>';
-                    return;
-                }
-                
-                devicesContent.innerHTML = devices.map(d => {
-                    const statusClass = d.status === 'online' ? 'online' : 'offline';
-                    const lastSeen = d.last_seen ? new Date(d.last_seen * 1000).toLocaleString() : 'Never';
-                    return `
-                        <div class="device-item" data-device-id="${d.id}">
-                            <div class="device-info">
-                                <div class="device-name">
-                                    <span class="device-status ${statusClass}"></span>
-                                    ${d.name}
-                                </div>
-                                <div class="device-meta">${d.device_type} • ${d.id}</div>
-                                <div class="device-meta">Last: ${lastSeen}</div>
-                            </div>
-                            <button class="revoke-btn" onclick="revokeDevice('${d.id}')">Revoke</button>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            function refreshDevicesPanel() {
-                // Re-render with current deviceEntities data
-                const devices = [];
-                deviceEntities.forEach((data, id) => {
-                    const props = data.entity.properties;
-                    devices.push({
-                        id: id,
-                        name: data.entity.name,
-                        device_type: props.type?.getValue?.() || props.type || 'unknown',
-                        status: props.status?.getValue?.() || props.status || 'offline',
-                        last_seen: data.data?.last_seen || 0
-                    });
-                });
-                updateDevicesPanel(devices);
-            }
-            
-            window.revokeDevice = function(deviceId) {
-                if (!confirm(`Revoke device "${deviceId}"? It will need to re-pair to reconnect.`)) {
-                    return;
-                }
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send(JSON.stringify({
-                        type: 'revokeDevice',
-                        data: { device_id: deviceId }
-                    }));
-                }
-            };
+            // Stub functions for compatibility - no longer show panels
+            function updatePairingPanel(requests) {}
+            function updateDevicesPanel(devices) {}
+            function refreshDevicesPanel() {}
             
             // Connect to server on load
             connectToServer();
