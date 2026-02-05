@@ -1,33 +1,41 @@
 /**
- * GlobalRTS Server - Minimal & Fast
+ * GlobalRTS Server - Enhanced with Rover WebSocket Support
  * 
- * No frameworks. Just Node.js http + ws library.
- * Connects rovers (HTTP) to GlobalRTS browsers (WebSocket).
+ * Now supports TWO connection modes for rovers:
+ * 1. WebSocket (preferred): Low latency, bidirectional, instant commands
+ * 2. HTTP (fallback): Works when WebSocket fails
  * 
  * Architecture:
- *   Rover (nRF9151) --HTTP POST--> Server --WebSocket--> GlobalRTS Browser
- *   Rover (nRF9151) <--HTTP GET--- Server <--WebSocket-- GlobalRTS Browser
+ *   Rover --WebSocket /rover--> Server --WebSocket--> Browser (instant!)
+ *   Rover --HTTP POST---------> Server --WebSocket--> Browser (fallback)
+ *   
+ * WebSocket gives you ~50-100ms latency (cellular only)
+ * HTTP polling adds +1000ms on top of that
  */
 
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const { WebSocketServer } = require('ws');
+const { WebSocketServer, WebSocket } = require('ws');
 
 const PORT = process.env.PORT || 8080;
 
 // ============================================
-// IN-MEMORY STATE (no database needed)
+// IN-MEMORY STATE
 // ============================================
 
 // Current rover state - latest telemetry from each rover
-// Key: roverId, Value: { id, name, type, lat, lon, alt, speed, heading, imu, encoders, lastSeen, status }
+// Key: roverId, Value: { id, name, type, lat, lon, ..., lastSeen, status }
 const rovers = new Map();
 
-// Pending commands for rovers - they poll this
+// Pending commands for rovers (HTTP polling only)
 // Key: roverId, Value: [{ id, type, payload, timestamp }]
 const pendingCommands = new Map();
+
+// Connected rover WebSocket clients
+// Key: roverId, Value: WebSocket
+const roverClients = new Map();
 
 // Connected GlobalRTS browser clients
 const browserClients = new Set();
@@ -36,7 +44,7 @@ const browserClients = new Set();
 let commandIdCounter = 0;
 
 // ============================================
-// OURA API PROXY
+// OURA API PROXY (unchanged)
 // ============================================
 
 function proxyToOura(ouraUrl, token, res) {
@@ -68,7 +76,7 @@ function proxyToOura(ouraUrl, token, res) {
 }
 
 // ============================================
-// HTTP SERVER - Serves files + rover API
+// HTTP SERVER
 // ============================================
 
 const MIME_TYPES = {
@@ -84,7 +92,7 @@ const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathname = url.pathname;
 
-    // CORS headers for all responses
+    // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -97,14 +105,14 @@ const server = http.createServer((req, res) => {
 
     // ========== ROVER API ENDPOINTS ==========
 
-    // POST /api/telemetry - Rover sends telemetry data
+    // POST /api/telemetry - Rover sends telemetry (HTTP fallback)
     if (req.method === 'POST' && pathname === '/api/telemetry') {
         let body = '';
         req.on('data', chunk => body += chunk);
         req.on('end', () => {
             try {
                 const data = JSON.parse(body);
-                handleRoverTelemetry(data);
+                handleRoverTelemetry(data, 'http');
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
             } catch (e) {
@@ -115,7 +123,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET /api/commands/:roverId - Rover polls for commands
+    // GET /api/commands/:roverId - Rover polls for commands (HTTP fallback)
     if (req.method === 'GET' && pathname.startsWith('/api/commands/')) {
         const roverId = pathname.split('/')[3];
         const commands = pendingCommands.get(roverId) || [];
@@ -126,14 +134,14 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // POST /api/command - Browser sends command to rover (alternative to WebSocket)
+    // POST /api/command - Browser sends command to rover
     if (req.method === 'POST' && pathname === '/api/command') {
         let body = '';
         req.on('data', chunk => body += chunk);
         req.on('end', () => {
             try {
                 const { roverId, type, payload } = JSON.parse(body);
-                queueCommand(roverId, type, payload);
+                sendCommandToRover(roverId, type, payload);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
             } catch (e) {
@@ -152,28 +160,26 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET /api/health - Simple health check
+    // GET /api/health - Health check with connection details
     if (req.method === 'GET' && pathname === '/api/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
             status: 'ok', 
-            rovers: rovers.size, 
+            rovers: rovers.size,
+            roversWS: roverClients.size,   // Rovers connected via WebSocket
+            roversHTTP: rovers.size - roverClients.size,  // Rovers using HTTP
             browsers: browserClients.size,
             uptime: process.uptime()
         }));
         return;
     }
 
-    // ========== OURA RING API PROXY ==========
-    // Proxies requests to Oura API to avoid CORS issues
+    // ========== OURA API PROXY ==========
     if (req.method === 'GET' && pathname.startsWith('/api/oura/')) {
         const ouraPath = pathname.replace('/api/oura', '');
         const queryString = url.search || '';
         const ouraUrl = `https://api.ouraring.com${ouraPath}${queryString}`;
-        
-        // Get token from CONFIG or environment
         const OURA_TOKEN = process.env.OURA_TOKEN || '527UFS4RVNQA4R72IIAGNHWMCQZ7A6EU';
-        
         proxyToOura(ouraUrl, OURA_TOKEN, res);
         return;
     }
@@ -203,11 +209,29 @@ const server = http.createServer((req, res) => {
 });
 
 // ============================================
-// WEBSOCKET SERVER - Browser connections
+// WEBSOCKET SERVER - Browser connections (unchanged path)
 // ============================================
 
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ noServer: true });
 
+// Handle upgrade requests - route to appropriate handler
+server.on('upgrade', (request, socket, head) => {
+    const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
+    
+    if (pathname === '/rover') {
+        // Rover WebSocket connection
+        wssRover.handleUpgrade(request, socket, head, (ws) => {
+            wssRover.emit('connection', ws, request);
+        });
+    } else {
+        // Browser WebSocket connection (default path: /)
+        wss.handleUpgrade(request, socket, head, (ws) => {
+            wss.emit('connection', ws, request);
+        });
+    }
+});
+
+// Browser WebSocket connections
 wss.on('connection', (ws) => {
     console.log('🌐 Browser connected');
     browserClients.add(ws);
@@ -233,8 +257,122 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('error', (err) => {
-        console.error('WebSocket error:', err);
+        console.error('Browser WebSocket error:', err);
         browserClients.delete(ws);
+    });
+});
+
+// ============================================
+// WEBSOCKET SERVER - Rover connections (NEW!)
+// ============================================
+
+const wssRover = new WebSocketServer({ noServer: true });
+
+wssRover.on('connection', (ws, request) => {
+    const clientIP = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
+    console.log(`🤖 Rover WebSocket connected from ${clientIP} (awaiting identification)`);
+    
+    let roverId = null;
+    let heartbeatInterval = null;
+    
+    // Setup heartbeat to detect stale connections
+    const heartbeat = () => {
+        ws.isAlive = true;
+    };
+    ws.isAlive = true;
+    ws.on('pong', heartbeat);
+    
+    // Ping every 30 seconds to keep connection alive
+    heartbeatInterval = setInterval(() => {
+        if (ws.isAlive === false) {
+            console.log(`🤖 Rover heartbeat failed: ${roverId || 'unknown'}`);
+            return ws.terminate();
+        }
+        ws.isAlive = false;
+        ws.ping();
+    }, 30000);
+    
+    ws.on('message', (message) => {
+        try {
+            const msgStr = message.toString();
+            const msg = JSON.parse(msgStr);
+            
+            // Handle rover identification
+            if (msg.type === 'rover:identify') {
+                roverId = msg.data?.id;
+                if (roverId) {
+                    // Check if rover already connected (from different instance?)
+                    const existingWs = roverClients.get(roverId);
+                    if (existingWs && existingWs !== ws && existingWs.readyState === WebSocket.OPEN) {
+                        console.log(`🤖 Rover ${roverId} reconnecting - closing old connection`);
+                        existingWs.close(1000, 'Superseded by new connection');
+                    }
+                    
+                    // Store WebSocket connection
+                    roverClients.set(roverId, ws);
+                    console.log(`🤖 Rover identified: ${roverId} (WebSocket mode, total: ${roverClients.size})`);
+                    
+                    // Send acknowledgment
+                    ws.send(JSON.stringify({
+                        type: 'ack',
+                        data: { message: 'Identified', id: roverId }
+                    }));
+                    
+                    // If there are pending commands (from before WS connected), send them
+                    const pending = pendingCommands.get(roverId) || [];
+                    if (pending.length > 0) {
+                        ws.send(JSON.stringify({
+                            type: 'commands',
+                            data: { commands: pending }
+                        }));
+                        pendingCommands.set(roverId, []);
+                        console.log(`📤 Sent ${pending.length} pending commands to ${roverId}`);
+                    }
+                }
+            }
+            
+            // Handle telemetry from rover
+            else if (msg.type === 'rover:telemetry') {
+                handleRoverTelemetry(msg.data, 'websocket');
+            }
+            
+            // Handle other rover messages
+            else {
+                console.log(`🤖 Rover message: ${msg.type}`, msg.data);
+            }
+            
+        } catch (e) {
+            console.error('Invalid rover WebSocket message:', e.message);
+        }
+    });
+
+    ws.on('close', (code, reason) => {
+        clearInterval(heartbeatInterval);
+        if (roverId) {
+            // Only delete if this is still the active connection for this rover
+            if (roverClients.get(roverId) === ws) {
+                roverClients.delete(roverId);
+            }
+            console.log(`🤖 Rover WebSocket disconnected: ${roverId} (code: ${code}, reason: ${reason || 'none'})`);
+            
+            // Mark rover as potentially offline
+            const rover = rovers.get(roverId);
+            if (rover) {
+                rover.connectionMode = 'disconnected';
+            }
+        } else {
+            console.log(`🤖 Rover WebSocket disconnected before identification (code: ${code})`);
+        }
+    });
+
+    ws.on('error', (err) => {
+        clearInterval(heartbeatInterval);
+        console.error(`Rover WebSocket error: ${err.message}`);
+        if (roverId) {
+            if (roverClients.get(roverId) === ws) {
+                roverClients.delete(roverId);
+            }
+        }
     });
 });
 
@@ -242,23 +380,23 @@ wss.on('connection', (ws) => {
 // MESSAGE HANDLERS
 // ============================================
 
-function handleRoverTelemetry(data) {
+function handleRoverTelemetry(data, source = 'http') {
     const { 
-        id,                    // Required: rover identifier
-        name = 'Rover',        // Display name
-        type = 'robot',        // Device type for icon
+        id,
+        name = 'Rover',
+        type = 'robot',
         // GPS data
         lat, lon, alt = 0,
         speed = 0, heading = 0,
         accuracy = 0, altAccuracy = 0, speedAccuracy = 0, headingAccuracy = 0,
         pdop = 0, hdop = 0, vdop = 0, tdop = 0,
         vSpeed = 0, vSpeedAccuracy = 0,
-        // IMU data (raw 16-bit values)
-        gx = 0, gy = 0, gz = 0,  // Gyroscope
-        ax = 0, ay = 0, az = 0,  // Accelerometer
+        // IMU data
+        gx = 0, gy = 0, gz = 0,
+        ax = 0, ay = 0, az = 0,
         // Encoder data
-        encL = 0, encR = 0,      // Left/Right encoder counts
-        encLVel = 0, encRVel = 0, // Encoder velocities
+        encL = 0, encR = 0,
+        encLVel = 0, encRVel = 0,
         // Status
         battery = 100,
         status = 'online'
@@ -287,7 +425,8 @@ function handleRoverTelemetry(data) {
         // Meta
         battery,
         status,
-        lastSeen: now
+        lastSeen: now,
+        connectionMode: source  // 'websocket' or 'http'
     };
 
     const isNew = !rovers.has(id);
@@ -295,13 +434,13 @@ function handleRoverTelemetry(data) {
 
     // Broadcast to all browsers
     const msgType = isNew ? 'device:online' : 'device:update';
-    broadcast({
+    broadcastToBrowsers({
         type: msgType,
         data: roverToDevice(roverData)
     });
 
     if (isNew) {
-        console.log(`🤖 Rover online: ${name} (${id})`);
+        console.log(`🤖 Rover online: ${name} (${id}) via ${source}`);
     }
 }
 
@@ -318,29 +457,27 @@ function handleBrowserMessage(ws, msg) {
 
         case 'sendCommand':
             const { deviceId, commandType, payload } = data;
-            queueCommand(deviceId, commandType, payload);
+            sendCommandToRover(deviceId, commandType, payload);
             ws.send(JSON.stringify({
                 type: 'command:sent',
-                data: { deviceId, commandType, status: 'queued' }
+                data: { deviceId, commandType, status: 'sent' }
             }));
             break;
 
-        // Pairing not needed for v1, but keep compatible
         case 'dismissPairing':
         case 'revokeDevice':
             // No-op for now
             break;
 
         default:
-            console.log('Unknown message type:', type);
+            console.log('Unknown browser message type:', type);
     }
 }
 
-function queueCommand(roverId, commandType, payload) {
-    if (!pendingCommands.has(roverId)) {
-        pendingCommands.set(roverId, []);
-    }
-    
+/**
+ * Send command to rover - prefers WebSocket, falls back to queue for HTTP
+ */
+function sendCommandToRover(roverId, commandType, payload) {
     const command = {
         id: ++commandIdCounter,
         type: commandType,
@@ -348,8 +485,23 @@ function queueCommand(roverId, commandType, payload) {
         timestamp: Date.now()
     };
     
+    // Try WebSocket first (instant delivery)
+    const roverWs = roverClients.get(roverId);
+    if (roverWs && roverWs.readyState === WebSocket.OPEN) {
+        roverWs.send(JSON.stringify({
+            type: 'command',
+            data: command
+        }));
+        console.log(`📤 Command sent (WebSocket): ${commandType} -> ${roverId}`);
+        return;
+    }
+    
+    // Fall back to queue for HTTP polling
+    if (!pendingCommands.has(roverId)) {
+        pendingCommands.set(roverId, []);
+    }
     pendingCommands.get(roverId).push(command);
-    console.log(`📤 Command queued: ${commandType} -> ${roverId}`);
+    console.log(`📤 Command queued (HTTP): ${commandType} -> ${roverId}`);
 }
 
 // Convert internal rover data to GlobalRTS device format
@@ -366,7 +518,7 @@ function roverToDevice(rover) {
         battery: rover.battery,
         status: rover.status,
         last_seen: Math.floor(rover.lastSeen / 1000),
-        // Extended telemetry (GlobalRTS can display if it wants)
+        connection_mode: rover.connectionMode,  // NEW: 'websocket' or 'http'
         telemetry: {
             gps: {
                 accuracy: rover.accuracy,
@@ -392,10 +544,10 @@ function roverToDevice(rover) {
     };
 }
 
-function broadcast(msg) {
+function broadcastToBrowsers(msg) {
     const data = JSON.stringify(msg);
     browserClients.forEach(client => {
-        if (client.readyState === 1) { // OPEN
+        if (client.readyState === WebSocket.OPEN) {
             client.send(data);
         }
     });
@@ -413,7 +565,7 @@ setInterval(() => {
         if (rover.status !== 'offline' && now - rover.lastSeen > TIMEOUT) {
             rover.status = 'offline';
             rovers.set(id, rover);
-            broadcast({
+            broadcastToBrowsers({
                 type: 'device:offline',
                 data: { deviceId: id }
             });
@@ -428,13 +580,17 @@ setInterval(() => {
 
 server.listen(PORT, () => {
     console.log(`
-╔═══════════════════════════════════════════════════╗
-║         GlobalRTS Server - Running                ║
-╠═══════════════════════════════════════════════════╣
-║  Web UI:     http://localhost:${PORT}               ║
-║  WebSocket:  ws://localhost:${PORT}                 ║
-║  Rover API:  POST /api/telemetry                  ║
-║              GET  /api/commands/:id               ║
-╚═══════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════════════════════╗
+║            GlobalRTS Server - Enhanced                        ║
+╠═══════════════════════════════════════════════════════════════╣
+║  Web UI:        http://localhost:${PORT}                        ║
+║                                                               ║
+║  Browser WS:    ws://localhost:${PORT}/                         ║
+║  Rover WS:      ws://localhost:${PORT}/rover      ← NEW!        ║
+║                                                               ║
+║  HTTP API:      POST /api/telemetry                           ║
+║                 GET  /api/commands/:id                        ║
+║                 GET  /api/health                              ║
+╚═══════════════════════════════════════════════════════════════╝
     `);
 });
