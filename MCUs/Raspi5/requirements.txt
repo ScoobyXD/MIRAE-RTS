@@ -1,0 +1,18 @@
+# GlobalRTS Rover - Raspberry Pi Dependencies
+#
+# Install with: pip3 install -r requirements.txt
+#
+# Note: Some packages are optional - the code gracefully degrades
+# if they're not available.
+
+# WebSocket client (primary communication mode)
+websockets>=12.0
+
+# Async HTTP client (for HTTP fallback)
+aiohttp>=3.9
+
+# Serial port access (for GPS and STM32)
+pyserial>=3.5
+
+# Optional: Better async serial support
+# aioserial>=1.3.0
