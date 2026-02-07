@@ -476,8 +476,8 @@ class RoverApplication:
         self.running = False
         
         # Simulation state
-        self._sim_lat = 34.0522
-        self._sim_lon = -118.2437
+        self._sim_lat = 37.7694
+        self._sim_lon = -122.4862
         self._sim_heading = 0.0
     
     def handle_command(self, cmd: Command):

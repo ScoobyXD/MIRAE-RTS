@@ -990,8 +990,16 @@
         const unitInfoBox = document.getElementById('unitInfoBox');
 
         try {
-            const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207);
-            viewer.scene.primitives.add(tileset);
+            // Try loading Google Photorealistic 3D Tiles (requires valid Cesium Ion token + asset access)
+            // If it fails, fall back to the default globe — not fatal
+            try {
+                const tileset = await Cesium.Cesium3DTileset.fromIonAssetId(2275207);
+                viewer.scene.primitives.add(tileset);
+            } catch (tileErr) {
+                console.warn('⚠️ 3D Tiles failed to load (token/access issue) — using default globe:', tileErr);
+                // Re-enable the globe so we still have a map
+                viewer.scene.globe = new Cesium.Globe(Cesium.Ellipsoid.WGS84);
+            }
             document.getElementById('loadingOverlay').style.display = 'none';
             
             viewer.camera.flyTo({
@@ -2148,11 +2156,7 @@
             
             // Extend the right-click waypoint handler to also send commands to server devices
             // Hook into the existing waypoint creation to send navigate commands
-            const originalCreateWaypoint = createWaypointForUnit;
             function createWaypointForUnitWithServer(unitObj, targetLon, targetLat) {
-                // Call original waypoint creation
-                originalCreateWaypoint(unitObj, targetLon, targetLat);
-                
                 // If this is a server device, send navigate command
                 const deviceId = unitObj.entity?.properties?.deviceId?.getValue?.() || 
                                  unitObj.entity?.properties?.deviceId;
@@ -2165,10 +2169,8 @@
                 }
             }
             
-            // Replace the waypoint creation function
-            if (typeof createWaypointForUnit === 'function') {
-                window.createWaypointForUnitWithServer = createWaypointForUnitWithServer;
-            }
+            // Make server waypoint function available globally
+            window.createWaypointForUnitWithServer = createWaypointForUnitWithServer;
             
             // ==========================================
             // SIMPLIFIED DEVICE PANEL FUNCTIONS (no UI panels needed)
@@ -2186,7 +2188,8 @@
             
         } catch (error) {
             console.error('Error:', error);
-            document.getElementById('loadingOverlay').innerHTML = '<h1 style="color:red;">Error: ' + error.message + '</h1>';
+            const errMsg = error?.message || error?.toString?.() || String(error) || 'Unknown error';
+            document.getElementById('loadingOverlay').innerHTML = '<h1 style="color:red;">Error: ' + errMsg + '</h1>';
         }
     </script>
 </body>

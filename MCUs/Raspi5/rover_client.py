@@ -505,12 +505,12 @@ async def test_mode(client: RoverClient):
     """
     import random
     
-    # Start position: Los Angeles
-    lat = 12.1234
-    lon = 123.3214
-    heading = 1.0
-    enc_left = 2
-    enc_right = 3
+    # Start position: San Francisco (Golden Gate Park area)
+    lat = 37.7694
+    lon = -122.4862
+    heading = 45.0
+    enc_left = 0
+    enc_right = 0
     
     def handle_command(cmd: Command):
         nonlocal lat, lon

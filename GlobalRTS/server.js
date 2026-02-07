@@ -160,17 +160,41 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET /api/health - Health check with connection details
+    // GET /api/health - Health check with connection details and live rover data
     if (req.method === 'GET' && pathname === '/api/health') {
+        const roverList = [];
+        rovers.forEach((rover, id) => {
+            roverList.push({
+                id: rover.id,
+                name: rover.name,
+                lat: rover.lat,
+                lon: rover.lon,
+                alt: rover.alt,
+                speed: rover.speed,
+                heading: rover.heading,
+                accuracy: rover.accuracy,
+                hdop: rover.hdop,
+                ax: rover.ax, ay: rover.ay, az: rover.az,
+                gx: rover.gx, gy: rover.gy, gz: rover.gz,
+                encL: rover.encL, encR: rover.encR,
+                encLVel: rover.encLVel, encRVel: rover.encRVel,
+                battery: rover.battery,
+                status: rover.status,
+                connectionMode: rover.connectionMode,
+                lastSeen: rover.lastSeen,
+                age: `${((Date.now() - rover.lastSeen) / 1000).toFixed(1)}s ago`
+            });
+        });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
             status: 'ok', 
             rovers: rovers.size,
-            roversWS: roverClients.size,   // Rovers connected via WebSocket
-            roversHTTP: rovers.size - roverClients.size,  // Rovers using HTTP
-            browsers: browserClients.size,
-            uptime: process.uptime()
-        }));
+            roversWS: roverClients.size,
+            roversHTTP: rovers.size - roverClients.size,
+            browsers: [...browserClients].filter(c => c.readyState === WebSocket.OPEN).length,
+            uptime: process.uptime(),
+            roverData: roverList
+        }, null, 2));
         return;
     }
 
@@ -432,15 +456,23 @@ function handleRoverTelemetry(data, source = 'http') {
     const isNew = !rovers.has(id);
     rovers.set(id, roverData);
 
+    // Log every telemetry (first 5, then every 10th)
+    const count = roverData._telemetryCount = (rovers.get(id)?._telemetryCount || 0) + 1;
+    roverData._telemetryCount = count;
+    if (count <= 5 || count % 10 === 0) {
+        console.log(`📡 Telemetry #${count} from ${id} via ${source}: lat=${lat}, lon=${lon}, speed=${speed}`);
+    }
+
     // Broadcast to all browsers
     const msgType = isNew ? 'device:online' : 'device:update';
+    const browserCount = [...browserClients].filter(c => c.readyState === WebSocket.OPEN).length;
     broadcastToBrowsers({
         type: msgType,
         data: roverToDevice(roverData)
     });
 
     if (isNew) {
-        console.log(`🤖 Rover online: ${name} (${id}) via ${source}`);
+        console.log(`🤖 Rover online: ${name} (${id}) via ${source} — broadcasting to ${browserCount} browsers`);
     }
 }
 
