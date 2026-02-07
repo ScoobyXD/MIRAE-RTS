@@ -43,6 +43,10 @@ const browserClients = new Set();
 // Command ID counter
 let commandIdCounter = 0;
 
+// Current active command per rover (for /api/health display)
+// Key: roverId, Value: { type, payload, timestamp, status }
+const activeCommands = new Map();
+
 // ============================================
 // OURA API PROXY (unchanged)
 // ============================================
@@ -160,38 +164,50 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // GET /api/health - Health check with connection details and live rover data
+    // GET /api/health - Health check with live telemetry + active commands
     if (req.method === 'GET' && pathname === '/api/health') {
         const roverList = [];
         rovers.forEach((rover, id) => {
+            const cmd = activeCommands.get(id);
             roverList.push({
                 id: rover.id,
                 name: rover.name,
-                lat: rover.lat,
-                lon: rover.lon,
-                alt: rover.alt,
-                speed: rover.speed,
-                heading: rover.heading,
-                accuracy: rover.accuracy,
-                hdop: rover.hdop,
-                ax: rover.ax, ay: rover.ay, az: rover.az,
-                gx: rover.gx, gy: rover.gy, gz: rover.gz,
-                encL: rover.encL, encR: rover.encR,
-                encLVel: rover.encLVel, encRVel: rover.encRVel,
-                battery: rover.battery,
-                status: rover.status,
-                connectionMode: rover.connectionMode,
-                lastSeen: rover.lastSeen,
-                age: `${((Date.now() - rover.lastSeen) / 1000).toFixed(1)}s ago`
+                // ── Live Telemetry ──
+                telemetry: {
+                    lat: rover.lat,
+                    lon: rover.lon,
+                    alt: rover.alt,
+                    speed: rover.speed,
+                    heading: rover.heading,
+                    accuracy: rover.accuracy,
+                    hdop: rover.hdop,
+                    imu: { ax: rover.ax, ay: rover.ay, az: rover.az, gx: rover.gx, gy: rover.gy, gz: rover.gz },
+                    encoders: { L: rover.encL, R: rover.encR, velL: rover.encLVel, velR: rover.encRVel },
+                    battery: rover.battery,
+                    status: rover.status,
+                    connectionMode: rover.connectionMode,
+                    lastSeen: rover.lastSeen,
+                    age: `${((Date.now() - rover.lastSeen) / 1000).toFixed(1)}s ago`
+                },
+                // ── Active Command ──
+                activeCommand: cmd ? {
+                    type: cmd.type,
+                    payload: cmd.payload,
+                    status: cmd.status,
+                    issuedAt: new Date(cmd.timestamp).toISOString(),
+                    age: `${((Date.now() - cmd.timestamp) / 1000).toFixed(1)}s ago`
+                } : null
             });
         });
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
             status: 'ok', 
-            rovers: rovers.size,
-            roversWS: roverClients.size,
-            roversHTTP: rovers.size - roverClients.size,
-            browsers: [...browserClients].filter(c => c.readyState === WebSocket.OPEN).length,
+            connections: {
+                rovers: rovers.size,
+                roversWS: roverClients.size,
+                roversHTTP: rovers.size - roverClients.size,
+                browsers: [...browserClients].filter(c => c.readyState === WebSocket.OPEN).length,
+            },
             uptime: process.uptime(),
             roverData: roverList
         }, null, 2));
@@ -360,6 +376,20 @@ wssRover.on('connection', (ws, request) => {
                 handleRoverTelemetry(msg.data, 'websocket');
             }
             
+            // Handle rover reporting command status
+            else if (msg.type === 'rover:command_status') {
+                if (msg.data?.id && msg.data?.status) {
+                    const existing = activeCommands.get(msg.data.id);
+                    if (existing) {
+                        existing.status = msg.data.status;
+                        if (msg.data.status === 'arrived') {
+                            existing.arrivedAt = Date.now();
+                        }
+                    }
+                    console.log(`📋 Command status from ${msg.data.id}: ${msg.data.status}`);
+                }
+            }
+            
             // Handle other rover messages
             else {
                 console.log(`🤖 Rover message: ${msg.type}`, msg.data);
@@ -490,10 +520,38 @@ function handleBrowserMessage(ws, msg) {
         case 'sendCommand':
             const { deviceId, commandType, payload } = data;
             sendCommandToRover(deviceId, commandType, payload);
+            // Track active command
+            activeCommands.set(deviceId, {
+                type: commandType,
+                payload: payload || {},
+                timestamp: Date.now(),
+                status: 'sent'
+            });
             ws.send(JSON.stringify({
                 type: 'command:sent',
                 data: { deviceId, commandType, status: 'sent' }
             }));
+            break;
+
+        case 'selectDevice':
+            if (data.deviceId) {
+                console.log(`🖱️  Browser selected: ${data.deviceId}`);
+                // Forward to rover
+                const selWs = roverClients.get(data.deviceId);
+                if (selWs && selWs.readyState === WebSocket.OPEN) {
+                    selWs.send(JSON.stringify({ type: 'selected', data: { id: data.deviceId } }));
+                }
+            }
+            break;
+
+        case 'deselectDevice':
+            if (data.deviceId) {
+                console.log(`🖱️  Browser deselected: ${data.deviceId}`);
+                const deselWs = roverClients.get(data.deviceId);
+                if (deselWs && deselWs.readyState === WebSocket.OPEN) {
+                    deselWs.send(JSON.stringify({ type: 'deselected', data: { id: data.deviceId } }));
+                }
+            }
             break;
 
         case 'dismissPairing':

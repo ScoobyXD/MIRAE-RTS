@@ -1076,6 +1076,16 @@
                 updateUnitInfoBox(unitObj);
                 unitInfoBox.style.display = 'block';
                 document.getElementById('selectedUnits').textContent = unitObj.entity.name;
+                
+                // Notify server that this device was selected
+                const deviceId = unitObj.entity?.properties?.deviceId?.getValue?.() || 
+                                 unitObj.entity?.properties?.deviceId;
+                if (deviceId && socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        type: 'selectDevice',
+                        data: { deviceId }
+                    }));
+                }
             }
             
             // Update unit info box with full telemetry data
@@ -1143,9 +1153,17 @@
             startLiveUpdate();
             
             function deselectAll() {
+                // Notify server about deselections
                 selectedUnits.forEach(u => {
+                    const deviceId = u.entity?.properties?.deviceId?.getValue?.() || 
+                                     u.entity?.properties?.deviceId;
+                    if (deviceId && socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({
+                            type: 'deselectDevice',
+                            data: { deviceId }
+                        }));
+                    }
                     u.ring.show = false;
-                    // Hide waypoint and path but don't delete them
                     if (u.waypoint) u.waypoint.show = false;
                     if (u.pathLine) u.pathLine.show = false;
                 });
@@ -1210,6 +1228,17 @@
                             material: new Cesium.PolylineDashMaterialProperty({ color: Cesium.Color.YELLOW, dashLength: 16 })
                         }
                     });
+                    
+                    // Send navigate command to server device
+                    const deviceId = unitObj.entity?.properties?.deviceId?.getValue?.() || 
+                                     unitObj.entity?.properties?.deviceId;
+                    if (deviceId && serverConnected) {
+                        sendDeviceCommand(deviceId, 'navigate', {
+                            latitude: lat,
+                            longitude: lon,
+                            altitude: alt
+                        });
+                    }
                 });
                 
                 console.log('Navigate to:', { lat, lon, alt, distance: dist, bearing: bear });
