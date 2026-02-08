@@ -101,7 +101,7 @@ class SimulatedRover:
         dist = haversine_distance(self.lat, self.lon, lat, lon)
         brng = bearing_to(self.lat, self.lon, lat, lon)
         print(f"\n{'='*70}")
-        print(f"🎯 Received Movement Command")
+        print(f"   Received Movement Command")
         print(f"   Target:   Latitude: {lat:.6f}  Longitude: {lon:.6f}  Alt: {alt:.1f}m")
         print(f"   Distance: {dist:.1f}m ({dist/1000:.2f}km)")
         print(f"   Bearing:  {brng:.1f}°")
@@ -124,7 +124,7 @@ class SimulatedRover:
                 self.target_lat = None
                 self.target_lon = None
                 print(f"\n{'='*70}")
-                print(f"✅ Arrived at destination!")
+                print(f"   Arrived at destination!")
                 print(f"   Position: {self.lat:.6f}, {self.lon:.6f}")
                 print(f"{'='*70}")
             else:
@@ -204,7 +204,7 @@ async def run():
 
     while True:
         try:
-            print(f"🔌 Connecting to {SERVER} ...")
+            print(f" Connecting to {SERVER} ...")
             async with websockets.connect(SERVER, ping_interval=20, ping_timeout=10) as ws:
                 rover.ws = ws
 
@@ -213,15 +213,15 @@ async def run():
                     "type": "rover:identify",
                     "data": { "id": ROVER_ID, "name": ROVER_NAME, "type": "robot" }
                 }))
-                print(f"📤 Sent identify")
+                print(f" Sent identify")
 
                 # ── Step 2: Wait for ack ────────────────────────────
                 ack_raw = await asyncio.wait_for(ws.recv(), timeout=5.0)
                 ack = json.loads(ack_raw)
                 if ack.get("type") != "ack":
-                    print(f"⚠️  Expected ack, got {ack.get('type')}")
+                    print(f"  Expected ack, got {ack.get('type')}")
 
-                print(f"✅ Connected! Rover idle at {rover.lat:.6f}, {rover.lon:.6f}")
+                print(f" Connected! Rover idle at {rover.lat:.6f}, {rover.lon:.6f}")
                 print(f"   Waiting for commands from miraeopus.com ...\n")
 
                 # ── Step 3: Concurrent send/receive ─────────────────
@@ -239,12 +239,12 @@ async def run():
                                 rover.lat, rover.lon,
                                 rover.target_lat, rover.target_lon
                             )
-                            print(f"\r🚀 #{rover.count:>4d} | {rover.lat:.6f}, {rover.lon:.6f} | "
+                            print(f"\r #{rover.count:>4d} | {rover.lat:.6f}, {rover.lon:.6f} | "
                                   f"H:{rover.heading:5.1f}° | {rover.speed:.1f} m/s | "
                                   f"dist:{dist:.0f}m | enc:{rover.enc_l}/{rover.enc_r}  ",
                                   end="", flush=True)
                         else:
-                            print(f"\r⏸️  #{rover.count:>4d} | {rover.lat:.6f}, {rover.lon:.6f} | "
+                            print(f"\r  #{rover.count:>4d} | {rover.lat:.6f}, {rover.lon:.6f} | "
                                   f"idle | enc:{rover.enc_l}/{rover.enc_r}  ",
                                   end="", flush=True)
 
@@ -268,36 +268,36 @@ async def run():
                                     rover.set_target(t_lat, t_lon, t_alt)
 
                             elif cmd_type == "stop":
-                                print(f"\n🛑 Received STOP command!")
+                                print(f"\n Received STOP command!")
                                 rover.target_lat = None
                                 rover.target_lon = None
                                 rover.nav_status = "idle"
                                 rover.speed = 0.0
 
                             else:
-                                print(f"\n📥 Command: {cmd_type} | {payload}")
+                                print(f"\n Command: {cmd_type} | {payload}")
 
                         elif msg_type == "selected":
-                            print(f"\n🖱️  {ROVER_NAME} selected")
+                            print(f"\n  {ROVER_NAME} selected")
 
                         elif msg_type == "deselected":
-                            print(f"\n🖱️  {ROVER_NAME} deselected")
+                            print(f"\n  {ROVER_NAME} deselected")
 
                         elif msg_type == "ack":
                             pass  # already handled
 
                         else:
-                            print(f"\n📥 {msg_type}: {data}")
+                            print(f"\n {msg_type}: {data}")
 
                 await asyncio.gather(telemetry_loop(), receive_loop())
 
         except (websockets.exceptions.ConnectionClosed,
                 websockets.exceptions.WebSocketException) as e:
-            print(f"\n❌ Connection lost: {e}")
+            print(f"\n Connection lost: {e}")
         except asyncio.TimeoutError:
-            print(f"\n❌ No ack from server (timeout)")
+            print(f"\n No ack from server (timeout)")
         except OSError as e:
-            print(f"\n❌ Network error: {e}")
+            print(f"\n Network error: {e}")
 
         rover.ws = None
         print(f"   Reconnecting in 5 seconds...")
@@ -306,7 +306,7 @@ async def run():
 
 if __name__ == "__main__":
     print(f"{'='*60}")
-    print(f"  🤖 GlobalRTS Test Rover")
+    print(f"  GlobalRTS Test Rover")
     print(f"  Server : {SERVER}")
     print(f"  Rover  : {ROVER_ID} ({ROVER_NAME})")
     print(f"  Start  : {START_LAT}, {START_LON}")
@@ -316,4 +316,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(run())
     except KeyboardInterrupt:
-        print("\n🛑 Stopped.")
+        print("\n Stopped.")
