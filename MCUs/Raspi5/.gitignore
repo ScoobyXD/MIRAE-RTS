@@ -1,0 +1,45 @@
+# =========================
+# 🚫 NEVER COMMIT SECRETS
+# =========================
+scoobyXdGitHubsshKey
+scoobyXdGitHubsshKey.pub
+*.key
+*.pem
+
+# =========================
+# 🧪 Local test / scratch
+# =========================
+test.py
+test_cellular.py
+
+# =========================
+# 🧠 SIM7600 example / vendor junk
+# (keep docs if you want)
+# =========================
+SIM7600X-4G-HAT-Demo/
+example projects for SIM7600GH/
+
+# =========================
+# 🐍 Python noise
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+
+# =========================
+# 🧰 OS / editor
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# =========================
+# 🧱 Build / logs
+# =========================
+*.log
+build/
+dist/
