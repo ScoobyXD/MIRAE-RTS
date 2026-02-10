@@ -170,3 +170,4 @@ echo ""
 echo "  Now run your rover:"
 echo "    python3 live_gps.py"
 echo "============================================================"
+\
