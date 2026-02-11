@@ -81,12 +81,9 @@ def get_interface_ip(iface):
 
 def create_cellular_socket(target_host, target_port):
     """
-    Create a socket bound to wwan0 at the kernel level using SO_BINDTODEVICE.
-    This is the same mechanism that 'curl --interface wwan0' uses.
+    Create a raw TCP socket bound to wwan0 at the kernel level using SO_BINDTODEVICE,
+    then connect it to the target. We do NOT wrap with SSL here -- websockets handles that.
     Requires root (sudo) because SO_BINDTODEVICE is a privileged operation.
-
-    We also resolve DNS and connect here, because the websockets library
-    may not properly use a pre-bound socket for its own DNS/connect.
     """
     ip = get_interface_ip(CELLULAR_IFACE)
     if not ip:
@@ -97,8 +94,7 @@ def create_cellular_socket(target_host, target_port):
 
     log.info("Forcing connection through %s (%s) via SO_BINDTODEVICE", CELLULAR_IFACE, ip)
 
-    # Resolve DNS through default (this is fine -- DNS is just a lookup)
-    import ssl
+    # Resolve DNS
     addrs = socket.getaddrinfo(target_host, target_port, socket.AF_INET, socket.SOCK_STREAM)
     if not addrs:
         log.error("DNS resolution failed for %s", target_host)
@@ -110,18 +106,12 @@ def create_cellular_socket(target_host, target_port):
     try:
         # SO_BINDTODEVICE: kernel-level binding to the interface.
         # All packets from this socket go through wwan0 regardless of routing table.
-        # This is what makes it work -- bind((ip, 0)) alone is not enough.
         sock.setsockopt(socket.SOL_SOCKET, 25, CELLULAR_IFACE.encode() + b'\0')  # 25 = SO_BINDTODEVICE
         sock.settimeout(15)
         sock.connect((target_ip, target_port))
         sock.settimeout(None)
-        log.info("Connected to %s:%d via %s", target_ip, target_port, CELLULAR_IFACE)
-
-        # Wrap with SSL (miraeopus.com uses wss://)
-        ssl_context = ssl.create_default_context()
-        sock = ssl_context.wrap_socket(sock, server_hostname=target_host)
-        log.info("SSL handshake complete")
-
+        log.info("Connected to %s:%d via %s (raw TCP, SSL will be added by websockets)",
+                 target_ip, target_port, CELLULAR_IFACE)
         return sock
     except Exception as e:
         log.error("Failed to connect via %s: %s", CELLULAR_IFACE, e)
@@ -631,15 +621,13 @@ async def run(gps, nmea, use_cellular=False):
                     print("   Cannot connect via cellular, retrying in 5s...")
                     await asyncio.sleep(5)
                     continue
-                # sock is already connected + SSL-wrapped.
-                # Use ws:// (not wss://) so websockets doesn't try SSL again.
-                # The Host header still needs the correct hostname for the
-                # WebSocket handshake, which websockets derives from the URI.
-                ws_uri = SERVER.replace("wss://", "ws://")
+                # Pass raw connected socket. websockets will do the SSL
+                # handshake on it (because URI is wss://). The socket is
+                # already bound to wwan0 via SO_BINDTODEVICE so all traffic
+                # including the SSL handshake goes through cellular.
                 ws = await websockets.connect(
-                    ws_uri,
+                    SERVER,
                     sock=sock,
-                    ssl=None,
                     ping_interval=None,
                     ping_timeout=None,
                 )
