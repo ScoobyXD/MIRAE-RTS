@@ -135,8 +135,49 @@ The SIM7600G-H has a Qualcomm MDM9607 chipset. Cellular data uses **QMI** (Qualc
 - `/dev/ttyUSB1` -- NMEA GPS output (used by live_gps.py for HDOP/PDOP)
 - `/dev/ttyUSB2` -- AT command port (used by live_gps.py for GPS reads)
 - `/dev/ttyUSB3` -- Modem port
-- `/dev/cdc-wdm0` -- QMI control device (used by cellular_connect.sh)
+- `/dev/cdc-wdm0` -- QMI control device (used by cellular_connect.sh via qmicli)
 - `wwan0` -- Cellular data interface (created by qmi_wwan kernel driver)
+
+### How QMI Cellular Data Works (step by step)
+
+When you run `cellular_connect.sh`, here is exactly what happens:
+
+**Step 1: Set modem online**
+`qmicli --dms-set-operating-mode='online'` -- Tells the SIM7600's radio to power on and register with the cellular network. The modem scans for towers, authenticates your SIM card, and connects to the strongest LTE tower.
+
+**Step 2: Set raw-ip mode on wwan0**
+```
+sudo ip link set wwan0 down
+echo 'Y' > /sys/class/net/wwan0/qmi/raw_ip
+sudo ip link set wwan0 up
+```
+The QMI driver defaults to "802.3" framing (ethernet-style packets with MAC headers). But cellular data sends raw IP packets (no ethernet headers). This switch tells the Linux kernel: "packets on wwan0 are raw IP, not ethernet frames." This setting can only be changed while the interface is down, which is why we down/up it.
+
+**Step 3: Start QMI data session**
+```
+qmicli -p -d /dev/cdc-wdm0 --device-open-net='net-raw-ip|net-no-qos-header' \
+  --wds-start-network="apn='super',ip-type=4" --client-no-release-cid
+```
+This is the critical step. It talks to the modem via the QMI protocol and says: "establish a PDP context (cellular data session) using APN 'super' with IPv4." The modem then:
+1. Sends an "Activate PDP Context" request to the cell tower
+2. The tower forwards it to the carrier core network (T-Mobile/Mint)
+3. The carrier authenticates your SIM and assigns you an IP
+4. Data packets can now flow: Pi -> wwan0 -> SIM7600 radio -> cell tower -> internet
+
+The `--client-no-release-cid` flag keeps the session handle alive after qmicli exits. Without it, the session would terminate when the command finishes.
+
+**Step 4: Get IP via DHCP**
+`udhcpc -i wwan0` -- The modem has a data session, but wwan0 still has no IP address configured in Linux. udhcpc is a lightweight DHCP client that asks the cellular network "what IP should I use?" and configures wwan0 with it (e.g., `100.85.235.88`).
+
+### Why It Disconnects While Driving
+
+When you drive between cell towers, the network does a **handover** (switches you from tower A to tower B). During handover, the PDP context (data session) can be dropped -- especially on MVNOs like Mint Mobile roaming on T-Mobile infrastructure. When this happens:
+- The modem loses its data session
+- wwan0 keeps its IP but can't route packets anymore
+- live_gps.py's WebSocket dies because its bound socket can't reach the server
+- The rover goes gray on GlobalRTS
+
+Unlike your phone (which has sophisticated always-on connection managers), the basic QMI setup is a one-shot deal. The fix: `cellular_connect.sh` now includes a **watchdog loop** that checks connectivity every 15 seconds and automatically re-establishes the data session if it drops.
 
 ### One-Time Pi Setup
 ```bash
@@ -163,15 +204,17 @@ ip link show wwan0           # Should exist (state DOWN is OK at this point)
 
 ### Bringing Up Cellular Data
 ```bash
-# Bring up wwan0 with cellular data via QMI
+# Terminal 1: Start cellular with auto-reconnect watchdog
 sudo bash cellular_connect.sh              # APN: super (Mint Mobile / T-Mobile MVNO)
-sudo bash cellular_connect.sh broadband    # Custom APN example
+# This stays running and monitors the connection. It will auto-reconnect
+# if the data session drops (cell tower handover, signal loss, etc.)
+# You'll see dots printed every 15s to show it's checking.
+# Press Ctrl+C to stop.
 
-# Verify cellular is up
-ip addr show wwan0           # Should show an inet IP address
-ping -c 2 -I wwan0 8.8.8.8  # Should get replies (through cellular!)
+# Terminal 2: Run the rover
+python3 live_gps.py --cellular
 
-# Stop cellular when done
+# To stop cellular later:
 sudo bash cellular_connect.sh stop
 ```
 
@@ -401,6 +444,9 @@ fly scale count 1 --yes
 - **Solution**: Enable GPS first (`AT+CGPS=1,1`), disable ModemManager, or use `--no-nmea` flag
 
 ## Changelog
+
+### 2026-02-10 -- cellular_connect.sh v2: Auto-Reconnect Watchdog
+The QMI data session drops during cell tower handovers while driving. cellular_connect.sh now runs a watchdog loop that pings every 15 seconds and automatically re-runs the full QMI session setup (raw-ip, wds-start-network, udhcpc) when connectivity is lost. Field tested: initial connection worked but died after ~5 min of driving due to tower handover. Watchdog fixes this.
 
 ### 2026-02-09 -- live_gps.py v2: NMEA, cellular --flag, latency
 Major rewrite of live_gps.py:
