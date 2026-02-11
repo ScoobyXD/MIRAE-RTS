@@ -31,6 +31,8 @@ import sys
 import signal
 import argparse
 import logging
+import logging.handlers
+import os
 import subprocess
 import threading
 
@@ -42,12 +44,31 @@ except ImportError:
     print("Install websockets first:  pip install websockets")
     sys.exit(1)
 
+try:
+    from can_bridge import CANBridge, setup_can_logging
+except ImportError:
+    CANBridge = None
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
     datefmt='%H:%M:%S'
 )
 log = logging.getLogger('live_gps')
+
+# Set up rotating file log
+LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+_file_handler = logging.handlers.RotatingFileHandler(
+    os.path.join(LOG_DIR, 'live_gps.log'),
+    maxBytes=5*1024*1024,
+    backupCount=10,
+)
+_file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s [%(levelname)s] %(name)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+))
+logging.getLogger().addHandler(_file_handler)
 
 # -- Config -------------------------------------------------------------------
 SERVER     = "wss://miraeopus.com/rover"
@@ -466,11 +487,12 @@ class LatencyTracker:
 # =============================================================================
 
 class LiveRover:
-    """Rover using real GPS + NMEA. Same telemetry format as test.py."""
+    """Rover using real GPS + NMEA + CAN. Same telemetry format as test.py."""
 
-    def __init__(self, gps, nmea):
+    def __init__(self, gps, nmea, can_bridge=None):
         self.gps = gps
         self.nmea = nmea
+        self.can_bridge = can_bridge
         self.lat = 0.0
         self.lon = 0.0
         self.alt = 0.0
@@ -551,13 +573,33 @@ class LiveRover:
         # Accuracy estimate: HDOP * 2.5m (typical GPS base accuracy)
         accuracy = round(hdop * 2.5, 1) if hdop < 50 else 0.0
 
-        # IMU placeholder (no STM32 yet)
-        ax = random.randint(-50, 50)
-        ay = random.randint(-50, 50)
-        az = 16300 + random.randint(-100, 100)
-        gx = random.randint(-5, 5)
-        gy = random.randint(-5, 5)
-        gz = random.randint(-3, 3)
+        # IMU data from STM32 via CAN (or placeholder if no CAN)
+        if self.can_bridge and self.can_bridge.is_stm32_alive():
+            imu_can = self.can_bridge.get_imu_data()
+            # Scale to raw-ish int values matching server expectation
+            ax = int(imu_can['ax'] * 1000)
+            ay = int(imu_can['ay'] * 1000)
+            az = int(imu_can['az'] * 1000)
+            gx = int(imu_can['gx'] * 1000)
+            gy = int(imu_can['gy'] * 1000)
+            gz = int(imu_can['gz'] * 1000)
+            enc_can = self.can_bridge.get_encoder_data()
+            enc_l = enc_can['encL']
+            enc_r = enc_can['encR']
+            enc_l_vel = enc_can['encLVel']
+            enc_r_vel = enc_can['encRVel']
+        else:
+            # No CAN -- random placeholder
+            ax = random.randint(-50, 50)
+            ay = random.randint(-50, 50)
+            az = 16300 + random.randint(-100, 100)
+            gx = random.randint(-5, 5)
+            gy = random.randint(-5, 5)
+            gz = random.randint(-3, 3)
+            enc_l = 0
+            enc_r = 0
+            enc_l_vel = 0
+            enc_r_vel = 0
 
         # Latency stats
         lat_stats = self.latency.get_stats()
@@ -573,8 +615,8 @@ class LiveRover:
             # IMU
             "ax": ax, "ay": ay, "az": az,
             "gx": gx, "gy": gy, "gz": gz,
-            # Encoders
-            "encL": 0, "encR": 0, "encLVel": 0, "encRVel": 0,
+            # Encoders (from CAN or zero)
+            "encL": enc_l, "encR": enc_r, "encLVel": enc_l_vel, "encRVel": enc_r_vel,
             # Status
             "battery": self.battery,
             "status": "online",
@@ -600,8 +642,8 @@ class LiveRover:
 # WebSocket loop
 # =============================================================================
 
-async def run(gps, nmea, use_cellular=False):
-    rover = LiveRover(gps, nmea)
+async def run(gps, nmea, use_cellular=False, can_bridge=None):
+    rover = LiveRover(gps, nmea, can_bridge=can_bridge)
     net_label = "4G" if use_cellular else "WiFi"
 
     # Parse server URL for host/port (needed for cellular socket)
@@ -745,17 +787,32 @@ async def run(gps, nmea, use_cellular=False):
                             t_alt = payload.get("altitude", 0)
                             if t_lat is not None and t_lon is not None:
                                 rover.set_target(t_lat, t_lon, t_alt)
+                                log.info("CMD navigate lat=%.6f lon=%.6f%s", t_lat, t_lon, cmd_age)
+                                # Forward to STM32 via CAN
+                                if rover.can_bridge and rover.has_fix:
+                                    brng = bearing_to(rover.lat, rover.lon, t_lat, t_lon)
+                                    rover.can_bridge.send_navigate(brng, 1.0)
+                                    log.info("CAN TX navigate heading=%.1f speed=1.0", brng)
                                 print(f"   Command latency{cmd_age}")
                         elif cmd_type == "stop":
                             print(f"\n STOP command received!{cmd_age}")
+                            log.info("CMD stop%s", cmd_age)
                             rover.target_lat = None
                             rover.target_lon = None
                             rover.nav_status = "idle"
+                            if rover.can_bridge:
+                                rover.can_bridge.send_stop()
+                                log.info("CAN TX stop")
                         elif cmd_type == "setSpeed":
                             spd = payload.get("speed", 0)
                             print(f"\n SET SPEED: {spd} m/s{cmd_age}")
+                            log.info("CMD setSpeed=%.2f%s", spd, cmd_age)
+                            if rover.can_bridge:
+                                rover.can_bridge.send_set_speed(spd)
+                                log.info("CAN TX setSpeed=%.2f", spd)
                         else:
                             print(f"\n CMD: {cmd_type} | {payload}{cmd_age}")
+                            log.info("CMD unknown type=%s payload=%s%s", cmd_type, payload, cmd_age)
                     elif msg_type == "selected":
                         print(f"\n  {ROVER_NAME} selected in GlobalRTS")
                     elif msg_type == "deselected":
@@ -771,10 +828,13 @@ async def run(gps, nmea, use_cellular=False):
             websockets.exceptions.ConnectionClosed,
             websockets.exceptions.WebSocketException,
         ) as e:
+            log.error("WebSocket connection lost: %s", e)
             print(f"\n Connection lost: {e}")
         except asyncio.TimeoutError:
+            log.error("WebSocket timeout: no ack from server")
             print("\n No ack from server (timeout)")
         except OSError as e:
+            log.error("Network error: %s", e)
             print(f"\n Network error: {e}")
 
         # Clean up
@@ -828,6 +888,14 @@ def main():
         "--debug", "-d", action="store_true",
         help="Enable debug logging",
     )
+    parser.add_argument(
+        "--can", action="store_true",
+        help="Enable CAN bus bridge to STM32 (requires MCP2515 + can0 interface)",
+    )
+    parser.add_argument(
+        "--can-interface", default="can0",
+        help="CAN interface name (default: can0)",
+    )
     args = parser.parse_args()
 
     global ROVER_ID, ROVER_NAME, SERVER
@@ -840,18 +908,23 @@ def main():
 
     gps = SIM7600GPS(port=args.at_port, baudrate=GPS_BAUD)
     nmea = None if args.no_nmea else NMEAReader(port=args.nmea_port, baudrate=GPS_BAUD)
+    can_br = None
 
     def cleanup(sig=None, frame=None):
         print("\nShutting down...")
+        log.info("Shutdown signal received")
         gps.close()
         if nmea:
             nmea.close()
+        if can_br:
+            can_br.close()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
 
     net_mode = "CELLULAR (wwan0)" if args.cellular else "WIFI (wlan0)"
+    can_mode = args.can_interface if args.can else "DISABLED"
 
     print(f"{'='*60}")
     print(f"  GlobalRTS Rover -- LIVE GPS")
@@ -860,11 +933,17 @@ def main():
     print(f"  AT Port : {args.at_port}")
     print(f"  NMEA    : {args.nmea_port if not args.no_nmea else 'DISABLED'}")
     print(f"  Network : {net_mode}")
+    print(f"  CAN Bus : {can_mode}")
+    print(f"  Logs    : {LOG_DIR}/")
     print(f"{'='*60}\n")
+
+    log.info("="*60)
+    log.info("live_gps.py starting")
+    log.info("Server=%s Rover=%s Network=%s CAN=%s", SERVER, ROVER_ID, net_mode, can_mode)
+    log.info("="*60)
 
     # If cellular, verify wwan0 has IP and we have root
     if args.cellular:
-        import os
         if os.geteuid() != 0:
             print("  ERROR: --cellular requires root for SO_BINDTODEVICE.")
             print("  Run with: sudo python3 live_gps.py --cellular")
@@ -895,6 +974,24 @@ def main():
             print("NMEA reader failed -- continuing without HDOP/PDOP")
             nmea = None
 
+    # Open CAN bus
+    if args.can:
+        if CANBridge is None:
+            print("CAN bridge not available (python-can not installed)")
+            print("Run: pip3 install python-can")
+        else:
+            setup_can_logging(LOG_DIR)
+            can_br = CANBridge(interface=args.can_interface)
+            if can_br.open():
+                print(f"CAN bus active on {args.can_interface} -- STM32 bridge enabled")
+                log.info("CAN bus opened on %s", args.can_interface)
+                # Send initial ping to STM32
+                can_br.send_ping()
+            else:
+                print("CAN bus failed -- continuing without STM32 data")
+                log.warning("CAN bus failed to open")
+                can_br = None
+
     # Wait for initial fix
     print("Waiting for GPS fix (up to 60s, need clear sky)...")
     for i in range(60):
@@ -917,14 +1014,18 @@ def main():
 
     # Run
     print(f"\nStarting WebSocket telemetry via {net_mode}...\n")
+    log.info("Starting WebSocket loop")
     try:
-        asyncio.run(run(gps, nmea, use_cellular=args.cellular))
+        asyncio.run(run(gps, nmea, use_cellular=args.cellular, can_bridge=can_br))
     except KeyboardInterrupt:
         pass
     finally:
         gps.close()
         if nmea:
             nmea.close()
+        if can_br:
+            can_br.close()
+        log.info("live_gps.py shut down")
         print("Done.")
 
 
