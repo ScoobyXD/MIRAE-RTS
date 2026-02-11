@@ -632,9 +632,12 @@ async def run(gps, nmea, use_cellular=False):
                     await asyncio.sleep(5)
                     continue
                 # sock is already connected + SSL-wrapped.
-                # Tell websockets not to do its own SSL wrapping.
+                # Use ws:// (not wss://) so websockets doesn't try SSL again.
+                # The Host header still needs the correct hostname for the
+                # WebSocket handshake, which websockets derives from the URI.
+                ws_uri = SERVER.replace("wss://", "ws://")
                 ws = await websockets.connect(
-                    SERVER,
+                    ws_uri,
                     sock=sock,
                     ssl=None,
                     ping_interval=None,
