@@ -78,8 +78,8 @@ wwan0 (4G)    -- Brought up by cellular_connect.sh. Used ONLY by live_gps.py
 
 **Quick reference:**
 ```bash
-python3 live_gps.py              # WiFi mode (WebSocket via wlan0)
-python3 live_gps.py --cellular   # Cellular mode (WebSocket via wwan0, SSH via wlan0)
+python3 live_gps.py                      # WiFi mode (WebSocket via wlan0)
+sudo python3 live_gps.py --cellular      # Cellular mode (WebSocket forced through wwan0)
 ```
 
 ## GPS Data Sources
@@ -233,9 +233,11 @@ sudo bash cellular_connect.sh stop
 python3 live_gps.py
 
 # --- Cellular mode (in the field) ---
-sudo bash cellular_connect.sh              # Step 1: bring up wwan0
-python3 live_gps.py --cellular             # Step 2: rover data goes through 4G
+sudo bash cellular_connect.sh              # Terminal 1: bring up wwan0 + watchdog
+sudo python3 live_gps.py --cellular        # Terminal 2: rover via cellular (sudo required!)
 # WiFi stays up! SSH still works on wlan0.
+# sudo is required because SO_BINDTODEVICE is a privileged kernel operation.
+# This is the same mechanism 'curl --interface wwan0' uses internally.
 
 # --- Skip NMEA if ttyUSB1 is busy ---
 python3 live_gps.py --no-nmea             # Only AT+CGPSINFO, no HDOP/PDOP
@@ -444,6 +446,9 @@ fly scale count 1 --yes
 - **Solution**: Enable GPS first (`AT+CGPS=1,1`), disable ModemManager, or use `--no-nmea` flag
 
 ## Changelog
+
+### 2026-02-10 -- live_gps.py: SO_BINDTODEVICE fix for cellular
+The previous socket.bind((ip, 0)) approach did NOT actually force traffic through wwan0. Field testing proved the WebSocket was still going through WiFi. Fixed by using SO_BINDTODEVICE (socket option 25) which binds at the kernel level -- same mechanism as `curl --interface wwan0`. The script now: resolves DNS, creates socket, sets SO_BINDTODEVICE to wwan0, connects, wraps with SSL, then passes the pre-connected socket to websockets. Requires sudo because SO_BINDTODEVICE is a privileged operation.
 
 ### 2026-02-10 -- cellular_connect.sh v2: Auto-Reconnect Watchdog
 The QMI data session drops during cell tower handovers while driving. cellular_connect.sh now runs a watchdog loop that pings every 15 seconds and automatically re-runs the full QMI session setup (raw-ip, wds-start-network, udhcpc) when connectivity is lost. Field tested: initial connection worked but died after ~5 min of driving due to tower handover. Watchdog fixes this.

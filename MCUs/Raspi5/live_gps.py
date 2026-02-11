@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
 """
-live_gps.py — Send REAL GPS from SIM7600G-H to GlobalRTS via WebSocket.
+live_gps.py -- Send REAL GPS from SIM7600G-H to GlobalRTS via WebSocket.
 
-Reads actual GPS coordinates from the SIM7600G-H HAT (AT+CGPSINFO on
-/dev/ttyUSB2) and sends them to miraeopus.com using whatever network
-the Pi already has (WiFi now, cellular later).
+Reads GPS from the SIM7600G-H HAT using two sources:
+  - /dev/ttyUSB2 (AT commands): AT+CGPSINFO for lat/lon/alt/speed/heading
+  - /dev/ttyUSB1 (NMEA port): $GPGGA for HDOP/sats/altitude, $GPGSA for PDOP/HDOP/VDOP
 
-This is the real-GPS version of test.py. Same WebSocket protocol,
-same server, same GlobalRTS UI — just real coordinates instead of
-simulated ones.
+Sends telemetry to miraeopus.com via WebSocket. Receives commands from GlobalRTS
+(laptop -> miraeopus.com -> SIM7600 cellular -> Raspi).
 
-Network note:
-    This script does NOT set up cellular data. It uses whatever internet
-    connection the Pi already has. To switch from WiFi to cellular:
-      1. Bring up wwan0 (see cellular_connect.sh)
-      2. Set routing so traffic goes through wwan0 instead of wlan0
-      3. Run this script — it doesn't care which interface is used
+Network modes:
+    python3 live_gps.py              WiFi (wlan0) -- for dev/testing
+    python3 live_gps.py --cellular   Cellular (wwan0) -- for field use
+                                     Only WebSocket uses cellular. WiFi stays for SSH.
 
-Usage:
-    python3 live_gps.py                              # Defaults
-    python3 live_gps.py --rover-id rover-001         # Custom ID
-    python3 live_gps.py --gps-port /dev/ttyUSB2      # Custom GPS port
+Prerequisites for cellular mode:
+    sudo apt install libqmi-utils udhcpc
+    sudo bash cellular_connect.sh    # brings up wwan0 with IP
 """
 
 import asyncio
@@ -28,11 +24,15 @@ import json
 import math
 import random
 import re
+import socket
+import struct
 import time
 import sys
 import signal
 import argparse
 import logging
+import subprocess
+import threading
 
 import serial
 
@@ -40,7 +40,7 @@ try:
     import websockets
 except ImportError:
     print("Install websockets first:  pip install websockets")
-    exit(1)
+    sys.exit(1)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,22 +49,242 @@ logging.basicConfig(
 )
 log = logging.getLogger('live_gps')
 
-# ── Config ──────────────────────────────────────────────────────────
+# -- Config -------------------------------------------------------------------
 SERVER     = "wss://miraeopus.com/rover"
 ROVER_ID   = "rover-001"
 ROVER_NAME = "RasPi Rover"
-GPS_PORT   = "/dev/ttyUSB2"
+AT_PORT    = "/dev/ttyUSB2"
+NMEA_PORT  = "/dev/ttyUSB1"
 GPS_BAUD   = 115200
-# ────────────────────────────────────────────────────────────────────
+CELLULAR_IFACE = "wwan0"
+# -----------------------------------------------------------------------------
 
+
+# =============================================================================
+# Network helpers
+# =============================================================================
+
+def get_interface_ip(iface):
+    """Get the IPv4 address of a network interface, or None."""
+    try:
+        result = subprocess.run(
+            ['ip', '-4', 'addr', 'show', iface],
+            capture_output=True, text=True, timeout=3
+        )
+        for line in result.stdout.split('\n'):
+            if 'inet ' in line:
+                return line.strip().split()[1].split('/')[0]
+    except Exception:
+        pass
+    return None
+
+
+def create_cellular_socket(target_host, target_port):
+    """
+    Create a socket bound to wwan0 at the kernel level using SO_BINDTODEVICE.
+    This is the same mechanism that 'curl --interface wwan0' uses.
+    Requires root (sudo) because SO_BINDTODEVICE is a privileged operation.
+
+    We also resolve DNS and connect here, because the websockets library
+    may not properly use a pre-bound socket for its own DNS/connect.
+    """
+    ip = get_interface_ip(CELLULAR_IFACE)
+    if not ip:
+        log.error(
+            "No IP on %s. Run: sudo bash cellular_connect.sh", CELLULAR_IFACE
+        )
+        return None
+
+    log.info("Forcing connection through %s (%s) via SO_BINDTODEVICE", CELLULAR_IFACE, ip)
+
+    # Resolve DNS through default (this is fine -- DNS is just a lookup)
+    import ssl
+    addrs = socket.getaddrinfo(target_host, target_port, socket.AF_INET, socket.SOCK_STREAM)
+    if not addrs:
+        log.error("DNS resolution failed for %s", target_host)
+        return None
+    target_ip = addrs[0][4][0]
+    log.info("Resolved %s -> %s", target_host, target_ip)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        # SO_BINDTODEVICE: kernel-level binding to the interface.
+        # All packets from this socket go through wwan0 regardless of routing table.
+        # This is what makes it work -- bind((ip, 0)) alone is not enough.
+        sock.setsockopt(socket.SOL_SOCKET, 25, CELLULAR_IFACE.encode() + b'\0')  # 25 = SO_BINDTODEVICE
+        sock.settimeout(15)
+        sock.connect((target_ip, target_port))
+        sock.settimeout(None)
+        log.info("Connected to %s:%d via %s", target_ip, target_port, CELLULAR_IFACE)
+
+        # Wrap with SSL (miraeopus.com uses wss://)
+        ssl_context = ssl.create_default_context()
+        sock = ssl_context.wrap_socket(sock, server_hostname=target_host)
+        log.info("SSL handshake complete")
+
+        return sock
+    except Exception as e:
+        log.error("Failed to connect via %s: %s", CELLULAR_IFACE, e)
+        sock.close()
+        return None
+
+
+# =============================================================================
+# NMEA reader (runs on background thread, reads /dev/ttyUSB1)
+# =============================================================================
+
+class NMEAReader:
+    """
+    Reads NMEA sentences from /dev/ttyUSB1 to get HDOP, PDOP, VDOP,
+    satellite count, and a second source of altitude.
+
+    The SIM7600G-H outputs NMEA on ttyUSB1 automatically when GPS is enabled.
+    Key sentences:
+      $GPGGA: time, lat, lon, fix_quality, num_sats, hdop, alt, ...
+      $GPGSA: mode, fix_type, sat_ids..., pdop, hdop, vdop
+      $GPRMC: time, status, lat, lon, speed_knots, heading, date, ...
+      $GPVTG: true_heading, ..., speed_knots, ..., speed_kmh, ...
+    """
+
+    def __init__(self, port=NMEA_PORT, baudrate=GPS_BAUD):
+        self.port = port
+        self.baudrate = baudrate
+        self.ser = None
+        self._thread = None
+        self._running = False
+
+        # Parsed data (updated by background thread)
+        self.hdop = 99.9
+        self.pdop = 99.9
+        self.vdop = 99.9
+        self.num_sats = 0
+        self.fix_quality = 0
+        self.gga_alt = 0.0
+        self.rmc_speed_mps = 0.0
+        self.rmc_heading = 0.0
+        self.vtg_speed_mps = 0.0
+        self.vtg_heading = 0.0
+        self.last_update = 0
+
+    def open(self):
+        try:
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=1)
+            log.info("NMEA port opened: %s", self.port)
+            self._running = True
+            self._thread = threading.Thread(target=self._read_loop, daemon=True)
+            self._thread.start()
+            return True
+        except serial.SerialException as e:
+            log.warning("NMEA port %s unavailable: %s (HDOP/PDOP will be estimated)", self.port, e)
+            return False
+
+    def close(self):
+        self._running = False
+        if self.ser and self.ser.is_open:
+            self.ser.close()
+
+    def _read_loop(self):
+        """Background thread: continuously read and parse NMEA sentences."""
+        while self._running:
+            try:
+                if not self.ser or not self.ser.is_open:
+                    break
+                line = self.ser.readline().decode(errors='ignore').strip()
+                if not line:
+                    continue
+                self._parse(line)
+            except serial.SerialException:
+                log.warning("NMEA port read error, stopping reader")
+                break
+            except Exception as e:
+                log.debug("NMEA parse exception: %s", e)
+
+    def _parse(self, line):
+        """Parse a single NMEA sentence."""
+        # $GPGGA,HHMMSS.SS,lat,N,lon,W,qual,numSV,hdop,alt,M,geoid,M,age,refid*CS
+        if line.startswith('$GPGGA') or line.startswith('$GNGGA'):
+            parts = line.split(',')
+            if len(parts) >= 10:
+                try:
+                    self.fix_quality = int(parts[6]) if parts[6] else 0
+                    self.num_sats = int(parts[7]) if parts[7] else 0
+                    self.hdop = float(parts[8]) if parts[8] else 99.9
+                    self.gga_alt = float(parts[9]) if parts[9] else 0.0
+                    self.last_update = time.time()
+                except (ValueError, IndexError):
+                    pass
+
+        # $GPGSA,mode,fixtype,sv1,...,sv12,pdop,hdop,vdop*CS
+        elif line.startswith('$GPGSA') or line.startswith('$GNGSA'):
+            parts = line.split(',')
+            if len(parts) >= 17:
+                try:
+                    pdop_str = parts[15]
+                    hdop_str = parts[16]
+                    vdop_raw = parts[17].split('*')[0] if len(parts) > 17 else ''
+                    if pdop_str:
+                        self.pdop = float(pdop_str)
+                    if hdop_str:
+                        self.hdop = float(hdop_str)
+                    if vdop_raw:
+                        self.vdop = float(vdop_raw)
+                    self.last_update = time.time()
+                except (ValueError, IndexError):
+                    pass
+
+        # $GPRMC,HHMMSS,A,lat,N,lon,W,speed_knots,heading,DDMMYY,...
+        elif line.startswith('$GPRMC') or line.startswith('$GNRMC'):
+            parts = line.split(',')
+            if len(parts) >= 9:
+                try:
+                    if parts[7]:
+                        self.rmc_speed_mps = float(parts[7]) * 0.514444
+                    if parts[8]:
+                        self.rmc_heading = float(parts[8])
+                    self.last_update = time.time()
+                except (ValueError, IndexError):
+                    pass
+
+        # $GPVTG,heading_true,T,heading_mag,M,speed_knots,N,speed_kmh,K,...
+        elif line.startswith('$GPVTG') or line.startswith('$GNVTG'):
+            parts = line.split(',')
+            if len(parts) >= 8:
+                try:
+                    if parts[1]:
+                        self.vtg_heading = float(parts[1])
+                    if parts[7]:
+                        self.vtg_speed_mps = float(parts[7]) / 3.6  # kmh to m/s
+                    self.last_update = time.time()
+                except (ValueError, IndexError):
+                    pass
+
+    def get_data(self):
+        """Return current NMEA-derived data as a dict."""
+        age = time.time() - self.last_update if self.last_update else 999
+        return {
+            "hdop": round(self.hdop, 2),
+            "pdop": round(self.pdop, 2),
+            "vdop": round(self.vdop, 2),
+            "num_sats": self.num_sats,
+            "fix_quality": self.fix_quality,
+            "gga_alt": round(self.gga_alt, 1),
+            "rmc_speed": round(self.rmc_speed_mps, 2),
+            "rmc_heading": round(self.rmc_heading, 1),
+            "vtg_speed": round(self.vtg_speed_mps, 2),
+            "vtg_heading": round(self.vtg_heading, 1),
+            "nmea_age": round(age, 1),
+            "nmea_valid": age < 5.0,
+        }
+
+
+# =============================================================================
+# AT command GPS reader (reads /dev/ttyUSB2)
+# =============================================================================
 
 class SIM7600GPS:
-    """
-    Real GPS reader for SIM7600G-H using AT+CGPSINFO.
-    Same parsing logic as GPS.py.
-    """
+    """Real GPS via AT+CGPSINFO on /dev/ttyUSB2."""
 
-    def __init__(self, port=GPS_PORT, baudrate=GPS_BAUD):
+    def __init__(self, port=AT_PORT, baudrate=GPS_BAUD):
         self.port = port
         self.baudrate = baudrate
         self.ser = None
@@ -73,34 +293,30 @@ class SIM7600GPS:
         self.no_fix_count = 0
 
     def open(self):
-        """Open serial port and enable GPS engine."""
         try:
             self.ser = serial.Serial(self.port, self.baudrate, timeout=1)
-            log.info(f"GPS serial opened: {self.port}")
+            log.info("AT port opened: %s", self.port)
 
-            # Enable GPS (safe to call if already on)
             resp = self._send_at("AT+CGPS=1,1", wait=2.0)
             if "ERROR" in resp and "already" not in resp.lower():
-                # GPS might already be enabled — check
                 resp2 = self._send_at("AT+CGPS?", wait=1.0)
                 if "+CGPS: 1" in resp2:
                     log.info("GPS engine already enabled")
                 else:
-                    log.warning(f"GPS enable response: {resp.strip()}")
+                    log.warning("GPS enable response: %s", resp.strip())
             else:
                 log.info("GPS engine enabled")
             return True
         except serial.SerialException as e:
-            log.error(f"Failed to open GPS port {self.port}: {e}")
+            log.error("Failed to open AT port %s: %s", self.port, e)
             return False
 
     def close(self):
         if self.ser and self.ser.is_open:
             self.ser.close()
-            log.info("GPS serial closed")
+            log.info("AT port closed")
 
     def _send_at(self, cmd, wait=1.0):
-        """Send AT command, return response."""
         if not self.ser or not self.ser.is_open:
             return ""
         try:
@@ -117,16 +333,13 @@ class SIM7600GPS:
 
     def read(self):
         """
-        Read GPS fix. Returns dict or None.
-
-        AT+CGPSINFO response:
-        +CGPSINFO: lat,N/S,lon,E/W,date,time,alt,speed,course
+        Read GPS from AT+CGPSINFO.
+        Response: +CGPSINFO: lat,N/S,lon,E/W,date,time,alt,speed_knots,course
         """
         if not self.ser:
             return None
 
         resp = self._send_at("AT+CGPSINFO", wait=1.0)
-
         m = re.search(r"\+CGPSINFO:\s*([^\r\n]+)", resp)
         if not m:
             self.no_fix_count += 1
@@ -138,11 +351,10 @@ class SIM7600GPS:
         if len(parts) < 8 or parts[0] == "" or parts[2] == "":
             self.no_fix_count += 1
             if self.no_fix_count % 5 == 0:
-                log.info(f"Waiting for GPS fix... ({self.no_fix_count} attempts)")
+                log.info("Waiting for GPS fix... (%d attempts)", self.no_fix_count)
             return None
 
         try:
-            # Latitude: DDMM.MMMMMM -> decimal degrees
             lat_raw = float(parts[0])
             lat_deg = int(lat_raw // 100)
             lat_min = lat_raw - (lat_deg * 100)
@@ -150,7 +362,6 @@ class SIM7600GPS:
             if parts[1] == "S":
                 lat = -lat
 
-            # Longitude: DDDMM.MMMMMM -> decimal degrees
             lon_raw = float(parts[2])
             lon_deg = int(lon_raw // 100)
             lon_min = lon_raw - (lon_deg * 100)
@@ -176,41 +387,100 @@ class SIM7600GPS:
             return fix
 
         except (ValueError, IndexError) as e:
-            log.warning(f"GPS parse error: {e} | raw: {payload}")
+            log.warning("GPS parse error: %s | raw: %s", e, payload)
             self.no_fix_count += 1
             return None
 
     def get_last_or_current(self):
-        """Try to read, fall back to last known fix."""
         fix = self.read()
         return fix if fix else self.last_fix
 
 
-# ── Earth math (same as test.py) ───────────────────────────────────
+# =============================================================================
+# Earth math
+# =============================================================================
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     R = 6371000
     rlat1, rlat2 = math.radians(lat1), math.radians(lat2)
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat/2)**2 + math.cos(rlat1)*math.cos(rlat2)*math.sin(dlon/2)**2
+    a = (math.sin(dlat / 2) ** 2
+         + math.cos(rlat1) * math.cos(rlat2) * math.sin(dlon / 2) ** 2)
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
 
 def bearing_to(lat1, lon1, lat2, lon2):
     rlat1, rlat2 = math.radians(lat1), math.radians(lat2)
     dlon = math.radians(lon2 - lon1)
     x = math.sin(dlon) * math.cos(rlat2)
-    y = math.cos(rlat1)*math.sin(rlat2) - math.sin(rlat1)*math.cos(rlat2)*math.cos(dlon)
+    y = (math.cos(rlat1) * math.sin(rlat2)
+         - math.sin(rlat1) * math.cos(rlat2) * math.cos(dlon))
     return (math.degrees(math.atan2(x, y)) + 360) % 360
 
 
-# ── Rover with real GPS ────────────────────────────────────────────
+# =============================================================================
+# Latency tracker
+# =============================================================================
+
+class LatencyTracker:
+    """
+    Measures WebSocket round-trip time using the protocol-level ping/pong.
+    websockets library handles pong automatically; we measure the time.
+    """
+
+    def __init__(self):
+        self.last_rtt_ms = 0.0
+        self.avg_rtt_ms = 0.0
+        self.min_rtt_ms = 9999.0
+        self.max_rtt_ms = 0.0
+        self.samples = 0
+        self._pending_ping_time = None
+
+    async def ping(self, ws):
+        """Send a WebSocket ping and measure pong latency."""
+        try:
+            self._pending_ping_time = time.monotonic()
+            pong_waiter = await ws.ping()
+            await asyncio.wait_for(pong_waiter, timeout=5.0)
+            rtt = (time.monotonic() - self._pending_ping_time) * 1000.0
+
+            self.last_rtt_ms = rtt
+            self.samples += 1
+            if rtt < self.min_rtt_ms:
+                self.min_rtt_ms = rtt
+            if rtt > self.max_rtt_ms:
+                self.max_rtt_ms = rtt
+            # Exponential moving average
+            if self.samples == 1:
+                self.avg_rtt_ms = rtt
+            else:
+                self.avg_rtt_ms = self.avg_rtt_ms * 0.8 + rtt * 0.2
+
+        except (asyncio.TimeoutError, Exception) as e:
+            log.debug("Ping failed: %s", e)
+            self.last_rtt_ms = -1
+
+    def get_stats(self):
+        return {
+            "rtt_ms": round(self.last_rtt_ms, 1),
+            "rtt_avg_ms": round(self.avg_rtt_ms, 1),
+            "rtt_min_ms": round(self.min_rtt_ms, 1) if self.min_rtt_ms < 9999 else 0,
+            "rtt_max_ms": round(self.max_rtt_ms, 1),
+            "rtt_samples": self.samples,
+        }
+
+
+# =============================================================================
+# Rover
+# =============================================================================
 
 class LiveRover:
-    """Rover using real GPS. Same telemetry format as test.py's SimulatedRover."""
+    """Rover using real GPS + NMEA. Same telemetry format as test.py."""
 
-    def __init__(self, gps: SIM7600GPS):
+    def __init__(self, gps, nmea):
         self.gps = gps
+        self.nmea = nmea
         self.lat = 0.0
         self.lon = 0.0
         self.alt = 0.0
@@ -225,6 +495,8 @@ class LiveRover:
         self.nav_status = "idle"
         self.ws = None
 
+        self.latency = LatencyTracker()
+
     def set_target(self, lat, lon, alt=0.0):
         self.target_lat = lat
         self.target_lon = lon
@@ -238,23 +510,56 @@ class LiveRover:
             print(f"   Current:  Lat: {self.lat:.6f}  Lon: {self.lon:.6f}")
             print(f"   Distance: {dist:.1f}m ({dist/1000:.2f}km)")
             print(f"   Bearing:  {brng:.1f}deg")
-            print(f"   (No motor control yet — command logged)")
+            print(f"   (No motor control yet -- command logged)")
             print(f"{'='*70}")
         else:
-            print(f"\n   NAVIGATE COMMAND: {lat:.6f}, {lon:.6f} (no GPS fix yet)")
+            print(f"\n   NAVIGATE CMD: {lat:.6f}, {lon:.6f} (no GPS fix yet)")
 
     def tick(self):
-        """Read real GPS, return telemetry dict."""
+        """Read GPS + NMEA, return telemetry dict."""
         self.count += 1
 
+        # AT command GPS (primary: lat/lon)
         fix = self.gps.get_last_or_current()
         if fix and fix["valid"]:
             self.lat = fix["lat"]
             self.lon = fix["lon"]
-            self.alt = fix["alt"]
-            self.speed = fix["speed"]
-            self.heading = fix["heading"]
             self.has_fix = True
+
+        # NMEA data (HDOP, PDOP, VDOP, sats, better alt/speed/heading)
+        nd = self.nmea.get_data() if self.nmea else {}
+        nmea_valid = nd.get("nmea_valid", False)
+
+        # Prefer NMEA altitude (from $GPGGA) if available, else AT alt
+        if nmea_valid and nd.get("gga_alt", 0) != 0:
+            self.alt = nd["gga_alt"]
+        elif fix and fix["valid"]:
+            self.alt = fix["alt"]
+
+        # Prefer NMEA speed (from $GPRMC or $GPVTG) if available
+        if nmea_valid and nd.get("rmc_speed", 0) > 0:
+            self.speed = nd["rmc_speed"]
+        elif nmea_valid and nd.get("vtg_speed", 0) > 0:
+            self.speed = nd["vtg_speed"]
+        elif fix and fix["valid"]:
+            self.speed = fix["speed"]
+
+        # Prefer NMEA heading (from $GPVTG or $GPRMC) if available
+        if nmea_valid and nd.get("vtg_heading", 0) > 0:
+            self.heading = nd["vtg_heading"]
+        elif nmea_valid and nd.get("rmc_heading", 0) > 0:
+            self.heading = nd["rmc_heading"]
+        elif fix and fix["valid"]:
+            self.heading = fix["heading"]
+
+        # DOP values from NMEA
+        hdop = nd.get("hdop", 99.9) if nmea_valid else 99.9
+        pdop = nd.get("pdop", 99.9) if nmea_valid else 99.9
+        vdop = nd.get("vdop", 99.9) if nmea_valid else 99.9
+        num_sats = nd.get("num_sats", 0) if nmea_valid else 0
+
+        # Accuracy estimate: HDOP * 2.5m (typical GPS base accuracy)
+        accuracy = round(hdop * 2.5, 1) if hdop < 50 else 0.0
 
         # IMU placeholder (no STM32 yet)
         ax = random.randint(-50, 50)
@@ -264,20 +569,30 @@ class LiveRover:
         gy = random.randint(-5, 5)
         gz = random.randint(-3, 3)
 
+        # Latency stats
+        lat_stats = self.latency.get_stats()
+
         return {
             "id": ROVER_ID, "name": ROVER_NAME, "type": "robot",
-            "lat": self.lat, "lon": self.lon, "alt": self.alt,
-            "speed": self.speed, "heading": self.heading,
-            "accuracy": 2.5 if self.has_fix else 0.0,
-            "hdop": 1.1 if self.has_fix else 99.9,
-            "pdop": 1.5 if self.has_fix else 99.9,
-            "vdop": 1.3 if self.has_fix else 99.9,
+            # GPS
+            "lat": self.lat, "lon": self.lon, "alt": round(self.alt, 1),
+            "speed": round(self.speed, 2), "heading": round(self.heading, 1),
+            "accuracy": accuracy,
+            "hdop": hdop, "pdop": pdop, "vdop": vdop,
+            "numSats": num_sats,
+            # IMU
             "ax": ax, "ay": ay, "az": az,
             "gx": gx, "gy": gy, "gz": gz,
-            "encL": 0, "encR": 0,
-            "encLVel": 0, "encRVel": 0,
+            # Encoders
+            "encL": 0, "encR": 0, "encLVel": 0, "encRVel": 0,
+            # Status
             "battery": self.battery,
-            "status": "online"
+            "status": "online",
+            # Latency (included in telemetry so GlobalRTS UI can display it)
+            "rtt_ms": lat_stats["rtt_ms"],
+            "rtt_avg_ms": lat_stats["rtt_avg_ms"],
+            # Timestamp for server-side latency measurement
+            "sent_at": int(time.time() * 1000),
         }
 
     async def report_command_status(self):
@@ -285,128 +600,243 @@ class LiveRover:
             try:
                 await self.ws.send(json.dumps({
                     "type": "rover:command_status",
-                    "data": {"id": ROVER_ID, "status": self.nav_status}
+                    "data": {"id": ROVER_ID, "status": self.nav_status},
                 }))
             except Exception:
                 pass
 
 
-# ── WebSocket loop ─────────────────────────────────────────────────
+# =============================================================================
+# WebSocket loop
+# =============================================================================
 
-async def run(gps: SIM7600GPS):
-    rover = LiveRover(gps)
+async def run(gps, nmea, use_cellular=False):
+    rover = LiveRover(gps, nmea)
+    net_label = "4G" if use_cellular else "WiFi"
+
+    # Parse server URL for host/port (needed for cellular socket)
+    import urllib.parse
+    parsed = urllib.parse.urlparse(SERVER)
+    ws_host = parsed.hostname
+    ws_port = parsed.port or (443 if parsed.scheme == 'wss' else 80)
 
     while True:
+        ws = None
         try:
-            print(f"\n Connecting to {SERVER} ...")
+            print(f"\n Connecting to {SERVER} via {net_label}...")
 
-            async with websockets.connect(SERVER, ping_interval=20, ping_timeout=10) as ws:
-                rover.ws = ws
+            if use_cellular:
+                sock = create_cellular_socket(ws_host, ws_port)
+                if sock is None:
+                    print("   Cannot connect via cellular, retrying in 5s...")
+                    await asyncio.sleep(5)
+                    continue
+                # sock is already connected + SSL-wrapped.
+                # Tell websockets not to do its own SSL wrapping.
+                ws = await websockets.connect(
+                    SERVER,
+                    sock=sock,
+                    ssl=None,
+                    ping_interval=None,
+                    ping_timeout=None,
+                )
+            else:
+                ws = await websockets.connect(
+                    SERVER,
+                    ping_interval=None,
+                    ping_timeout=None,
+                )
 
-                # Identify
-                await ws.send(json.dumps({
-                    "type": "rover:identify",
-                    "data": {"id": ROVER_ID, "name": ROVER_NAME, "type": "robot"}
-                }))
-                print(f" Sent identify")
+            rover.ws = ws
 
-                # Wait for ack
-                ack_raw = await asyncio.wait_for(ws.recv(), timeout=5.0)
-                ack = json.loads(ack_raw)
-                if ack.get("type") != "ack":
-                    print(f"  Expected ack, got {ack.get('type')}")
+            # Identify
+            await ws.send(json.dumps({
+                "type": "rover:identify",
+                "data": {
+                    "id": ROVER_ID,
+                    "name": ROVER_NAME,
+                    "type": "robot",
+                },
+            }))
+            print(" Sent identify")
 
-                fix_str = f"{rover.lat:.6f}, {rover.lon:.6f}" if rover.has_fix else "waiting for GPS fix..."
-                print(f" Connected! Position: {fix_str}")
-                print(f"   Sending REAL GPS to miraeopus.com ...\n")
+            ack_raw = await asyncio.wait_for(ws.recv(), timeout=5.0)
+            ack = json.loads(ack_raw)
+            if ack.get("type") != "ack":
+                print(f"  Expected ack, got {ack.get('type')}")
 
-                async def telemetry_loop():
-                    while True:
-                        data = rover.tick()
-                        await ws.send(json.dumps({"type": "rover:telemetry", "data": data}))
-                        await rover.report_command_status()
+            fix_str = (
+                f"{rover.lat:.6f}, {rover.lon:.6f}"
+                if rover.has_fix
+                else "waiting for GPS fix..."
+            )
+            print(f" Connected! Position: {fix_str}")
+            print(f"   Sending REAL GPS via {net_label}...\n")
 
-                        if rover.has_fix:
-                            extra = ""
-                            if rover.target_lat is not None:
-                                dist = haversine_distance(
-                                    rover.lat, rover.lon,
-                                    rover.target_lat, rover.target_lon
-                                )
-                                extra = f" | target:{dist:.0f}m"
-                            print(f"\r #{rover.count:>4d} | {rover.lat:.6f}, {rover.lon:.6f} | "
-                                  f"alt:{rover.alt:.1f}m | H:{rover.heading:5.1f}deg | "
-                                  f"{rover.speed:.1f}m/s | FIX{extra}  ",
-                                  end="", flush=True)
+            # Initial latency measurement
+            await rover.latency.ping(ws)
+            init_rtt = rover.latency.last_rtt_ms
+            if init_rtt > 0:
+                print(f"   Initial latency: {init_rtt:.0f}ms\n")
+
+            async def telemetry_loop():
+                ping_counter = 0
+                while True:
+                    data = rover.tick()
+                    await ws.send(json.dumps({
+                        "type": "rover:telemetry",
+                        "data": data,
+                    }))
+                    await rover.report_command_status()
+
+                    # Measure latency every 10 seconds
+                    ping_counter += 1
+                    if ping_counter % 10 == 0:
+                        await rover.latency.ping(ws)
+
+                    # Print status line
+                    lat_stats = rover.latency.get_stats()
+                    rtt_str = f"{lat_stats['rtt_ms']:.0f}ms" if lat_stats['rtt_ms'] > 0 else "..."
+
+                    if rover.has_fix:
+                        nd = rover.nmea.get_data() if rover.nmea else {}
+                        sats = nd.get("num_sats", 0)
+                        hdop = nd.get("hdop", 99.9)
+                        extra = ""
+                        if rover.target_lat is not None:
+                            dist = haversine_distance(
+                                rover.lat, rover.lon,
+                                rover.target_lat, rover.target_lon,
+                            )
+                            extra = f" tgt:{dist:.0f}m"
+                        print(
+                            f"\r #{rover.count:>4d} "
+                            f"{rover.lat:.6f},{rover.lon:.6f} "
+                            f"alt:{rover.alt:.0f}m "
+                            f"spd:{rover.speed:.1f}m/s "
+                            f"hdg:{rover.heading:.0f} "
+                            f"sats:{sats} hdop:{hdop:.1f} "
+                            f"rtt:{rtt_str} "
+                            f"{net_label}{extra}  ",
+                            end="", flush=True,
+                        )
+                    else:
+                        print(
+                            f"\r  #{rover.count:>4d} NO FIX "
+                            f"({gps.no_fix_count}) "
+                            f"rtt:{rtt_str} {net_label}  ",
+                            end="", flush=True,
+                        )
+
+                    await asyncio.sleep(1.0)
+
+            async def receive_loop():
+                async for raw in ws:
+                    recv_time = time.time()
+                    msg = json.loads(raw)
+                    msg_type = msg.get("type", "")
+                    data = msg.get("data", {})
+
+                    if msg_type == "command":
+                        cmd_type = data.get("type", "")
+                        payload = data.get("payload", {})
+                        cmd_ts = data.get("timestamp", 0)
+
+                        # Command latency: time from browser click to rover receipt
+                        cmd_age = ""
+                        if cmd_ts > 0:
+                            age_ms = (recv_time * 1000) - cmd_ts
+                            cmd_age = f" (cmd age: {age_ms:.0f}ms)"
+
+                        if cmd_type == "navigate":
+                            t_lat = payload.get("latitude")
+                            t_lon = payload.get("longitude")
+                            t_alt = payload.get("altitude", 0)
+                            if t_lat is not None and t_lon is not None:
+                                rover.set_target(t_lat, t_lon, t_alt)
+                                print(f"   Command latency{cmd_age}")
+                        elif cmd_type == "stop":
+                            print(f"\n STOP command received!{cmd_age}")
+                            rover.target_lat = None
+                            rover.target_lon = None
+                            rover.nav_status = "idle"
+                        elif cmd_type == "setSpeed":
+                            spd = payload.get("speed", 0)
+                            print(f"\n SET SPEED: {spd} m/s{cmd_age}")
                         else:
-                            print(f"\r  #{rover.count:>4d} | NO GPS FIX "
-                                  f"(attempt {gps.no_fix_count}) | waiting...  ",
-                                  end="", flush=True)
+                            print(f"\n CMD: {cmd_type} | {payload}{cmd_age}")
+                    elif msg_type == "selected":
+                        print(f"\n  {ROVER_NAME} selected in GlobalRTS")
+                    elif msg_type == "deselected":
+                        print(f"\n  {ROVER_NAME} deselected")
+                    elif msg_type == "ack":
+                        pass
+                    else:
+                        log.debug("msg: %s %s", msg_type, data)
 
-                        await asyncio.sleep(1.0)
+            await asyncio.gather(telemetry_loop(), receive_loop())
 
-                async def receive_loop():
-                    async for raw in ws:
-                        msg = json.loads(raw)
-                        msg_type = msg.get("type", "")
-                        data = msg.get("data", {})
-
-                        if msg_type == "command":
-                            cmd_type = data.get("type", "")
-                            payload = data.get("payload", {})
-                            if cmd_type == "navigate":
-                                t_lat = payload.get("latitude")
-                                t_lon = payload.get("longitude")
-                                t_alt = payload.get("altitude", 0)
-                                if t_lat is not None and t_lon is not None:
-                                    rover.set_target(t_lat, t_lon, t_alt)
-                            elif cmd_type == "stop":
-                                print(f"\n STOP command received!")
-                                rover.target_lat = None
-                                rover.target_lon = None
-                                rover.nav_status = "idle"
-                            else:
-                                print(f"\n Command: {cmd_type} | {payload}")
-                        elif msg_type == "selected":
-                            print(f"\n  {ROVER_NAME} selected")
-                        elif msg_type == "deselected":
-                            print(f"\n  {ROVER_NAME} deselected")
-                        elif msg_type == "ack":
-                            pass
-                        else:
-                            print(f"\n {msg_type}: {data}")
-
-                await asyncio.gather(telemetry_loop(), receive_loop())
-
-        except (websockets.exceptions.ConnectionClosed,
-                websockets.exceptions.WebSocketException) as e:
+        except (
+            websockets.exceptions.ConnectionClosed,
+            websockets.exceptions.WebSocketException,
+        ) as e:
             print(f"\n Connection lost: {e}")
         except asyncio.TimeoutError:
-            print(f"\n No ack from server (timeout)")
+            print("\n No ack from server (timeout)")
         except OSError as e:
             print(f"\n Network error: {e}")
 
+        # Clean up
+        if ws is not None:
+            try:
+                await ws.close()
+            except Exception:
+                pass
         rover.ws = None
-        print(f"   Reconnecting in 5 seconds...")
+        print("   Reconnecting in 5 seconds...")
         await asyncio.sleep(5)
 
 
+# =============================================================================
+# Main
+# =============================================================================
+
 def main():
     parser = argparse.ArgumentParser(
-        description='Send REAL GPS from SIM7600G-H to GlobalRTS'
+        description="Send REAL GPS from SIM7600G-H to GlobalRTS"
     )
-    parser.add_argument('--gps-port', default='/dev/ttyUSB2',
-                        help='GPS AT command port (default: /dev/ttyUSB2)')
-    parser.add_argument('--rover-id', default='rover-001',
-                        help='Rover ID (default: rover-001)')
-    parser.add_argument('--rover-name', default='RasPi Rover',
-                        help='Rover display name')
-    parser.add_argument('--server', default='wss://miraeopus.com/rover',
-                        help='WebSocket server URL')
-    parser.add_argument('--debug', '-d', action='store_true',
-                        help='Enable debug logging')
-    parser.add_argument('--cellular', default='wifi',
-                        help='default wifi or use --cellular flag')
+    parser.add_argument(
+        "--cellular", action="store_true",
+        help="Route WebSocket through wwan0 (cellular). WiFi stays for SSH.",
+    )
+    parser.add_argument(
+        "--at-port", default="/dev/ttyUSB2",
+        help="AT command port for GPS (default: /dev/ttyUSB2)",
+    )
+    parser.add_argument(
+        "--nmea-port", default="/dev/ttyUSB1",
+        help="NMEA port for HDOP/PDOP/sats (default: /dev/ttyUSB1)",
+    )
+    parser.add_argument(
+        "--no-nmea", action="store_true",
+        help="Skip NMEA port (no HDOP/PDOP data, only AT+CGPSINFO)",
+    )
+    parser.add_argument(
+        "--rover-id", default="rover-001",
+        help="Rover ID (default: rover-001)",
+    )
+    parser.add_argument(
+        "--rover-name", default="RasPi Rover",
+        help="Rover display name",
+    )
+    parser.add_argument(
+        "--server", default="wss://miraeopus.com/rover",
+        help="WebSocket server URL",
+    )
+    parser.add_argument(
+        "--debug", "-d", action="store_true",
+        help="Enable debug logging",
+    )
     args = parser.parse_args()
 
     global ROVER_ID, ROVER_NAME, SERVER
@@ -417,51 +847,93 @@ def main():
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    gps = SIM7600GPS(port=args.gps_port, baudrate=GPS_BAUD)
+    gps = SIM7600GPS(port=args.at_port, baudrate=GPS_BAUD)
+    nmea = None if args.no_nmea else NMEAReader(port=args.nmea_port, baudrate=GPS_BAUD)
 
     def cleanup(sig=None, frame=None):
         print("\nShutting down...")
         gps.close()
+        if nmea:
+            nmea.close()
         sys.exit(0)
+
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
 
+    net_mode = "CELLULAR (wwan0)" if args.cellular else "WIFI (wlan0)"
+
     print(f"{'='*60}")
-    print(f"  GlobalRTS Rover LIVE GPS")
-    print(f"  Server : {SERVER}")
-    print(f"  Rover  : {ROVER_ID} ({ROVER_NAME})")
-    print(f"  GPS    : {args.gps_port}")
+    print(f"  GlobalRTS Rover -- LIVE GPS")
+    print(f"  Server  : {SERVER}")
+    print(f"  Rover   : {ROVER_ID} ({ROVER_NAME})")
+    print(f"  AT Port : {args.at_port}")
+    print(f"  NMEA    : {args.nmea_port if not args.no_nmea else 'DISABLED'}")
+    print(f"  Network : {net_mode}")
     print(f"{'='*60}\n")
+
+    # If cellular, verify wwan0 has IP and we have root
+    if args.cellular:
+        import os
+        if os.geteuid() != 0:
+            print("  ERROR: --cellular requires root for SO_BINDTODEVICE.")
+            print("  Run with: sudo python3 live_gps.py --cellular")
+            sys.exit(1)
+        ip = get_interface_ip(CELLULAR_IFACE)
+        if ip:
+            print(f"  Cellular IP: {ip} ({CELLULAR_IFACE})")
+            wifi_ip = get_interface_ip("wlan0")
+            if wifi_ip:
+                print(f"  WiFi IP:     {wifi_ip} (wlan0) -- SSH available here")
+        else:
+            print(f"  ERROR: {CELLULAR_IFACE} has no IP address.")
+            print(f"  Run first: sudo bash cellular_connect.sh")
+            sys.exit(1)
 
     # Open GPS
     if not gps.open():
-        print(f"Failed to open GPS on {args.gps_port}")
+        print(f"Failed to open GPS on {args.at_port}")
         print("Check: ls /dev/ttyUSB*")
         print("Check: sudo systemctl stop ModemManager")
         sys.exit(1)
+
+    # Open NMEA
+    if nmea:
+        if nmea.open():
+            print("NMEA reader active -- will get HDOP/PDOP/sats")
+        else:
+            print("NMEA reader failed -- continuing without HDOP/PDOP")
+            nmea = None
 
     # Wait for initial fix
     print("Waiting for GPS fix (up to 60s, need clear sky)...")
     for i in range(60):
         fix = gps.read()
         if fix and fix["valid"]:
+            nd = nmea.get_data() if nmea else {}
             print(f"\n  GPS FIX: {fix['lat']:.6f}, {fix['lon']:.6f}")
-            print(f"  Alt: {fix['alt']:.1f}m  Speed: {fix['speed']:.1f}m/s  Heading: {fix['heading']:.1f}deg")
+            print(f"  Alt: {fix['alt']:.1f}m  "
+                  f"Speed: {fix['speed']:.1f}m/s  "
+                  f"Heading: {fix['heading']:.1f}deg")
+            if nd.get("nmea_valid"):
+                print(f"  HDOP: {nd['hdop']}  PDOP: {nd['pdop']}  "
+                      f"VDOP: {nd['vdop']}  Sats: {nd['num_sats']}")
             break
         dots = "." * ((i % 3) + 1)
         print(f"  Searching{dots:<3s} ({i+1}/60)  ", end="\r")
         time.sleep(1)
     else:
-        print("\n  No GPS fix yet — starting anyway (will get fix outdoors)")
+        print("\n  No GPS fix yet -- starting anyway (will get fix outdoors)")
 
     # Run
-    print("\nStarting WebSocket telemetry...\n")
+    print(f"\nStarting WebSocket telemetry via {net_mode}...\n")
     try:
-        asyncio.run(run(gps))
+        asyncio.run(run(gps, nmea, use_cellular=args.cellular))
     except KeyboardInterrupt:
         pass
     finally:
         gps.close()
+        if nmea:
+            nmea.close()
         print("Done.")
 
 
