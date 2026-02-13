@@ -366,3 +366,4 @@ Created QMI-based cellular script. Initial GPS over WiFi confirmed working.
 ### IMPORTANT NOTES KEEP THIS AT THE BOTTOM OF THIS MD FILE
 1. For the love of god do not rename the file or folder other than what was already given and if you want to name something new, ask first
 2. Do not use emojis for any print statements for files meant to go into a linux machine like Raspi, it can't encode the emoji properly.
+3. Always start the project in Plan Mode
